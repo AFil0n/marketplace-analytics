@@ -1,0 +1,34 @@
+[ policy_match ]
+countryName             = match
+stateOrProvinceName     = match
+organizationName        = match
+organizationalUnitName  = optional
+commonName              = supplied
+
+[ req ]
+default_bits            = 4096
+default_md              = sha256
+prompt                  = no
+distinguished_name      = dn
+req_extensions          = v3_req
+utf8                    = yes
+encrypt_key             = no
+
+[ dn ]
+countryName             = RU
+stateOrProvinceName     = Moscow
+localityName            = Moscow
+organizationName        = Yandex
+organizationalUnitName  = Practice
+
+[ v3_req ]
+basicConstraints        = CA:FALSE
+keyUsage                = digitalSignature, keyEncipherment
+extendedKeyUsage        = serverAuth, clientAuth
+subjectAltName          = @alt_names
+nsComment               = "Kafka Broker Certificate"
+
+[ alt_names ]
+DNS.1 = kafka-controller-0
+DNS.2 = kafka-0
+DNS.3 = kafka-1
