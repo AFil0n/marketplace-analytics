@@ -770,10 +770,6 @@ services:
     networks:
       - yandex-practicum-kafka
     depends_on:
-      kafka-0:
-        condition: service_healthy
-      kafka-1:
-        condition: service_healthy
       schema-registry:
         condition: service_healthy
 
