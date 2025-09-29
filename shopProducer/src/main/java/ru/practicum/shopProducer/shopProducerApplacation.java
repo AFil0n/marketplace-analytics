@@ -2,6 +2,8 @@ package ru.practicum.shopProducer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -10,25 +12,30 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
-import org.apache.kafka.common.serialization.StringSerializer;
 import ru.practicum.common.utils.JsonFileManager;
 import ru.practicum.common.model.Product;
+import ru.practicum.common.utils.SchemaRegistryHelper;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
 @Slf4j
 public class shopProducerApplacation {
     private static final Properties PROPERTIES;
-    private static final String dir = "data";
+    private static final String dir = "/data";
     private static final String TOPIC_NAME = "shopTopic";
     private static final String schemaRegistryUrl = "https://localhost:8081";
     private static final String USER = "testUser";
     private static final String PASS = "password";
+    private static final String SCHEMA_PATH = "/infra/schema/product.json";
+    private static final String SR_TS_FILE = "/etc/security/kafka-0.crt";
+    private static final String SR_TS_PASS = "";
 
     static {
         PROPERTIES = new Properties();
@@ -72,8 +79,45 @@ public class shopProducerApplacation {
 
     public static void main(String[] args) {
         try (Producer<String, Product> producer = new KafkaProducer<>(PROPERTIES)) {
+            registerSchema();
             publishingProducts(producer);
         }
+    }
+
+    private static void registerSchema(){
+        String schemaString;
+        Map<String, Object> props = getSchemaRegistryClientProps();
+        SchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryUrl, 10, props);
+
+        try{
+            schemaString = loadSchemaFromFile();
+            SchemaRegistryHelper.registerSchema(schemaRegistryClient, TOPIC_NAME, schemaString);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static Map<String, Object> getSchemaRegistryClientProps(){
+        Map<String, Object> props = new HashMap<>();
+        props.put("schema.registry.url", schemaRegistryUrl);
+        props.put("basic.auth.credentials.source", "USER_INFO");
+        props.put("basic.auth.user.info", USER + ":" + PASS);
+        props.put("schema.registry.ssl.truststore.location", SR_TS_FILE);
+        props.put("schema.registry.ssl.truststore.type", "PEM");
+        props.put("schema.registry.ssl.truststore.password", SR_TS_PASS);
+
+        // Добавьте дополнительные параметры
+        props.put("schema.registry.ssl.protocol", "TLSv1.2");
+        props.put("schema.registry.ssl.enabled.protocols", "TLSv1.2");
+        props.put("schema.registry.ssl.endpoint.identification.algorithm", "https/rc1a-50sf9jd2p6i6et9j.mdb.yandexcloud.net");
+
+        return props;
+    }
+
+    private static String loadSchemaFromFile() throws IOException {
+        Path path = Path.of(SCHEMA_PATH);
+        return Files.readString(path);
     }
 
     private static List<Product> getFileProducts(String path) {
@@ -91,7 +135,6 @@ public class shopProducerApplacation {
     }
 
     private static void publishingProducts(Producer<String, Product> producer) {
-        //TODO добавить schemaRegistry
         List<Product> products = null;
 
         while (true) {

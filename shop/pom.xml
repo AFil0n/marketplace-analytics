@@ -9,7 +9,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.example</groupId>
+    <groupId>ru.practicum</groupId>
     <artifactId>shop</artifactId>
 
     <properties>
