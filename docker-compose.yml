@@ -602,10 +602,16 @@ services:
     container_name: schema-registry
     ports:
       - '8081:8081'
+      - '8082:8082'
     environment:
       # Basic Configuration
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081,https://0.0.0.0:8082
+      SCHEMA_REGISTRY_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pkcs12
+      SCHEMA_REGISTRY_SSL_KEYSTORE_PASSWORD: password
+      SCHEMA_REGISTRY_SSL_KEY_PASSWORD: password
+      SCHEMA_REGISTRY_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
+      SCHEMA_REGISTRY_SSL_TRUSTSTORE_PASSWORD: password
 
       # Kafka Configuration
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka-0:1092,kafka-1:2092  # INTERNAL порты
@@ -741,10 +747,10 @@ services:
     container_name: debezium-ui
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8060:8060"
     environment:
       - KAFKA_CONNECT_URIS=http://kafka-connect:8083
-      - PROXY_FRONTEND_URL=http://localhost:8080
+      - PROXY_FRONTEND_URL=http://localhost:8060
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -758,10 +764,18 @@ services:
       context: ./shopProducer
     ports:
       - "3333:3333"
+    volumes:
+      - ./infra/schema:/etc/schema
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
     networks:
       - yandex-practicum-kafka
     depends_on:
-      - kafka-ui
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
 
 
 

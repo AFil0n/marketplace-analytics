@@ -18,7 +18,7 @@ sleep 15
 # Создаем топики
 echo "Creating topics..."
 kafka-topics --bootstrap-server $KAFKA_BROKER --create \
-  --topic topic-1 --partitions 2 --replication-factor 2 \
+  --topic shopTopic --partitions 2 --replication-factor 2 \
   --command-config $CLIENT_CONFIG
 
 kafka-topics --bootstrap-server $KAFKA_BROKER --create \
@@ -31,19 +31,19 @@ echo "Setting up ACLs..."
 # Для topic-1
 kafka-acls --bootstrap-server $KAFKA_BROKER \
   --add --allow-principal User:producer \
-  --operation WRITE --topic topic-1 \
+  --operation WRITE --topic shopTopic \
   --command-config $CLIENT_CONFIG
 
 kafka-acls --bootstrap-server $KAFKA_BROKER \
   --add --allow-principal User:consumer \
   --operation READ \
-  --topic topic-1 \
+  --topic shopTopic \
   --command-config $CLIENT_CONFIG
 
 kafka-acls --bootstrap-server $KAFKA_BROKER \
   --add --allow-principal User:consumer \
   --operation DESCRIBE \
-  --topic topic-1 \
+  --topic shopTopic \
   --command-config $CLIENT_CONFIG
 
 kafka-acls --bootstrap-server $KAFKA_BROKER \

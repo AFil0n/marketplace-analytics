@@ -12,7 +12,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
-import org.apache.kafka.common.serialization.StringSerializer;
 import ru.practicum.common.utils.JsonFileManager;
 import ru.practicum.common.model.Product;
 import ru.practicum.common.utils.SchemaRegistryHelper;
@@ -31,12 +30,13 @@ public class shopProducerApplacation {
     private static final Properties PROPERTIES;
     private static final String dir = "/data";
     private static final String TOPIC_NAME = "shopTopic";
-    private static final String schemaRegistryUrl = "https://localhost:8081";
+    private static final String schemaRegistryUrl = "http://schema-registry:8081";
     private static final String USER = "testUser";
     private static final String PASS = "password";
-    private static final String SCHEMA_PATH = "/infra/schema/product.json";
+    private static final String SCHEMA_PATH = "/etc/schema/product.json";
     private static final String SR_TS_FILE = "/etc/kafka/secrets/kafka-0.crt";
     private static final String SR_TS_PASS = "";
+    private static final String SUBJECT_NAME = TOPIC_NAME + "-value";
 
     static {
         PROPERTIES = new Properties();
@@ -54,11 +54,13 @@ public class shopProducerApplacation {
         PROPERTIES.put("schema.registry.url", schemaRegistryUrl);
         PROPERTIES.put("schema.registry.basic.auth.user.info", USER + ":" + PASS);
         PROPERTIES.put("basic.auth.credentials.source", "USER_INFO");
+        PROPERTIES.put("auto.register.schemas", "true");
+        PROPERTIES.put("use.latest.version", "true");
 
         // SSL настройки для Schema Registry
-        PROPERTIES.put("schema.registry.ssl.truststore.location", SR_TS_FILE);
-        PROPERTIES.put("schema.registry.ssl.truststore.type", "PEM");
-        PROPERTIES.put("schema.registry.ssl.truststore.password", SR_TS_PASS);
+        PROPERTIES.put("schema.registry.ssl.truststore.location", "");
+        PROPERTIES.put("schema.registry.ssl.truststore.type", "");
+        PROPERTIES.put("schema.registry.ssl.truststore.password", "");
 
         // Настройки безопасности Kafka
         PROPERTIES.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
@@ -83,6 +85,7 @@ public class shopProducerApplacation {
         // Дополнительные настройки
         PROPERTIES.put(CommonClientConfigs.CLIENT_ID_CONFIG, "producer-app");
         PROPERTIES.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        PROPERTIES.put("schema.registry.log.service.errors", "true");
     }
 
     public static void main(String[] args) {
@@ -94,12 +97,11 @@ public class shopProducerApplacation {
 
     private static void registerSchema(){
         String schemaString;
-        Map<String, Object> props = getSchemaRegistryClientProps();
-        SchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryUrl, 10, props);
+        SchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryUrl, 10, getSchemaRegistryClientProps());
 
         try{
             schemaString = loadSchemaFromFile();
-            SchemaRegistryHelper.registerSchema(schemaRegistryClient, TOPIC_NAME, schemaString);
+            SchemaRegistryHelper.registerSchema(schemaRegistryClient, SUBJECT_NAME, schemaString);
         } catch (Exception e) {
             e.printStackTrace();
         }
