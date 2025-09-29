@@ -12,6 +12,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
+import org.apache.kafka.common.serialization.StringSerializer;
 import ru.practicum.common.utils.JsonFileManager;
 import ru.practicum.common.model.Product;
 import ru.practicum.common.utils.SchemaRegistryHelper;
@@ -34,18 +35,32 @@ public class shopProducerApplacation {
     private static final String USER = "testUser";
     private static final String PASS = "password";
     private static final String SCHEMA_PATH = "/infra/schema/product.json";
-    private static final String SR_TS_FILE = "/etc/security/kafka-0.crt";
+    private static final String SR_TS_FILE = "/etc/kafka/secrets/kafka-0.crt";
     private static final String SR_TS_PASS = "";
 
     static {
         PROPERTIES = new Properties();
-        // Основные настройки
+
+        // Основные настройки Kafka
         PROPERTIES.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1090,kafka-1:2090");
         PROPERTIES.put(ProducerConfig.ACKS_CONFIG, "all");
         PROPERTIES.put(ProducerConfig.RETRIES_CONFIG, 3);
-        PROPERTIES.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
 
-        // Настройки безопасности
+        // СЕРИАЛИЗАТОРЫ - только один способ!
+        PROPERTIES.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        PROPERTIES.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
+
+        // Настройки Schema Registry
+        PROPERTIES.put("schema.registry.url", schemaRegistryUrl);
+        PROPERTIES.put("schema.registry.basic.auth.user.info", USER + ":" + PASS);
+        PROPERTIES.put("basic.auth.credentials.source", "USER_INFO");
+
+        // SSL настройки для Schema Registry
+        PROPERTIES.put("schema.registry.ssl.truststore.location", SR_TS_FILE);
+        PROPERTIES.put("schema.registry.ssl.truststore.type", "PEM");
+        PROPERTIES.put("schema.registry.ssl.truststore.password", SR_TS_PASS);
+
+        // Настройки безопасности Kafka
         PROPERTIES.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
         PROPERTIES.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
         PROPERTIES.put(SaslConfigs.SASL_JAAS_CONFIG,
@@ -53,7 +68,8 @@ public class shopProducerApplacation {
                         "username=\"producer\" " +
                         "password=\"password\";");
 
-        // SSL Config
+        // SSL Config для Kafka
+        PROPERTIES.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
         PROPERTIES.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12");
         PROPERTIES.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "JKS");
         PROPERTIES.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
@@ -67,14 +83,6 @@ public class shopProducerApplacation {
         // Дополнительные настройки
         PROPERTIES.put(CommonClientConfigs.CLIENT_ID_CONFIG, "producer-app");
         PROPERTIES.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-        PROPERTIES.put("javax.net.debug", "ssl");
-
-        PROPERTIES.put("schema.registry.url", schemaRegistryUrl);
-        PROPERTIES.put("schema.registry.basic.auth.user.info", USER + ":" + PASS);
-
-        PROPERTIES.put("schema.registry.ssl.truststore.location", "user");
-        PROPERTIES.put("schema.registry.ssl.truststore.type", "PEM");
-        PROPERTIES.put("schema.registry.ssl.truststore.password", "password");
     }
 
     public static void main(String[] args) {
