@@ -57,7 +57,7 @@ public class JsonFileManager {
 
         try (JsonParser parser = factory.createParser(new File(file))) {
             if (parser.nextToken() != JsonToken.START_ARRAY) {
-                throw new IOException("Expected JSON array"); //TODO перемещать полность. файл создавая массив
+                throw new IOException("Expected JSON array");
             }
 
             BufferedWriter currentWriter = null;
@@ -116,6 +116,22 @@ public class JsonFileManager {
         }
     }
 
+    public static Path getFirstJsonFile(String dirPath) throws IOException {
+        return Files.list(Paths.get(dirPath))
+                .filter(Files::isRegularFile)
+                .filter(path -> path.getFileName().toString().toLowerCase().endsWith(".json"))
+                .sorted(Comparator.comparing(Path::getFileName))
+                .findFirst().get();
+    }
+
+    public static Path getAnyJsonFile(String dirPath) throws IOException {
+        return Files.list(Paths.get(dirPath))
+                .filter(Files::isRegularFile)
+                .filter(path -> path.getFileName().toString().toLowerCase().endsWith(".json"))
+                .sorted(Comparator.comparing(Path::getFileName))
+                .findAny().get();
+    }
+
     private static List<Path> getJsonFiles(String dirPath, String filenamePattern) throws IOException {
         Path dir = Paths.get(dirPath);
 
@@ -127,13 +143,13 @@ public class JsonFileManager {
                 .collect(Collectors.toList());
     }
 
-    private static void removeFile(String filePath) throws IOException {
+    public static void removeFile(String filePath) throws IOException {
         Path file = Paths.get(filePath);
         isFile(file, filePath);
         Files.deleteIfExists(file);
     }
 
-    private static void removeDirectory(String dirPath) throws IOException {
+    public static void removeDirectory(String dirPath) throws IOException {
         Path dir = Paths.get(dirPath);
         isDirectory(dir, dirPath);
 
