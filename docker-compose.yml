@@ -322,9 +322,6 @@ services:
       # Plugin Path
       CONNECT_PLUGIN_PATH: "/usr/share/java,/etc/kafka-connect/jars"
 
-      # JVM Options to fix Reflections issue
-      KAFKA_OPTS: "-Dorg.reflections.includePackages= -Dorg.reflections.excludePackages=*"
-
       # Storage Topics for MirrorMaker
       CONNECT_CONFIG_STORAGE_TOPIC: mm2-configs
       CONNECT_OFFSET_STORAGE_TOPIC: mm2-offsets
@@ -336,6 +333,13 @@ services:
       # Logging Configuration
       CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.mirror=INFO,org.apache.kafka.connect=INFO"
       CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+
+      KAFKA_OPTS: "
+            -Dorg.reflections.includePackages=
+            -Dorg.reflections.excludePackages=org.jetbrains,io.grpc,io.conscrypt,io.netty
+            -Dreflections.scan.includePackages=
+            -Dreflections.scan.excludePackages=*
+          "
 
     volumes:
       - ./cert/kafka-0-creds:/etc/kafka/secrets
