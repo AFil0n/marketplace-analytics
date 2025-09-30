@@ -767,6 +767,7 @@ services:
     volumes:
       - ./infra/schema:/etc/schema
       - ./cert/kafka-0-creds:/etc/kafka/secrets
+      - ./data:/etc/data
     networks:
       - yandex-practicum-kafka
     depends_on:

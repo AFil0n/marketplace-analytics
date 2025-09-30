@@ -12,6 +12,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
+import org.apache.kafka.common.serialization.StringSerializer;
 import ru.practicum.common.utils.JsonFileManager;
 import ru.practicum.common.model.Product;
 import ru.practicum.common.utils.SchemaRegistryHelper;
@@ -28,7 +29,7 @@ import java.util.Properties;
 @Slf4j
 public class shopProducerApplacation {
     private static final Properties PROPERTIES;
-    private static final String dir = "/data";
+    private static final String dir = "/etc/data";
     private static final String TOPIC_NAME = "shopTopic";
     private static final String schemaRegistryUrl = "http://schema-registry:8081";
     private static final String USER = "testUser";
@@ -47,15 +48,19 @@ public class shopProducerApplacation {
         PROPERTIES.put(ProducerConfig.RETRIES_CONFIG, 3);
 
         // СЕРИАЛИЗАТОРЫ - только один способ!
-        PROPERTIES.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
-        PROPERTIES.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
-
+        PROPERTIES.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        PROPERTIES.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
         // Настройки Schema Registry
         PROPERTIES.put("schema.registry.url", schemaRegistryUrl);
-        PROPERTIES.put("schema.registry.basic.auth.user.info", USER + ":" + PASS);
-        PROPERTIES.put("basic.auth.credentials.source", "USER_INFO");
+        PROPERTIES.put("basic.auth.credentials.source", "URL");
         PROPERTIES.put("auto.register.schemas", "true");
         PROPERTIES.put("use.latest.version", "true");
+
+        PROPERTIES.put("json.fail.invalid.schema", "false");
+        PROPERTIES.put("json.use.optional.for.non.required", "true");
+        PROPERTIES.put("oneof.for.nullables", "false");
+
 
         // SSL настройки для Schema Registry
         PROPERTIES.put("schema.registry.ssl.truststore.location", "");
@@ -111,16 +116,17 @@ public class shopProducerApplacation {
     public static Map<String, Object> getSchemaRegistryClientProps(){
         Map<String, Object> props = new HashMap<>();
         props.put("schema.registry.url", schemaRegistryUrl);
-        props.put("basic.auth.credentials.source", "USER_INFO");
-        props.put("basic.auth.user.info", USER + ":" + PASS);
-        props.put("schema.registry.ssl.truststore.location", SR_TS_FILE);
-        props.put("schema.registry.ssl.truststore.type", "PEM");
-        props.put("schema.registry.ssl.truststore.password", SR_TS_PASS);
+        props.put("basic.auth.credentials.source", "URL");
+        //props.put("basic.auth.credentials.source", "USER_INFO");
+        //props.put("basic.auth.user.info", USER + ":" + PASS);
+        props.put("schema.registry.ssl.truststore.location", "");
+        //props.put("schema.registry.ssl.truststore.type", "PEM");
+        props.put("schema.registry.ssl.truststore.password", "");
 
         // Добавьте дополнительные параметры
-        props.put("schema.registry.ssl.protocol", "TLSv1.2");
-        props.put("schema.registry.ssl.enabled.protocols", "TLSv1.2");
-        props.put("schema.registry.ssl.endpoint.identification.algorithm", "https/rc1a-50sf9jd2p6i6et9j.mdb.yandexcloud.net");
+        //props.put("schema.registry.ssl.protocol", "TLSv1.2");
+        //props.put("schema.registry.ssl.enabled.protocols", "TLSv1.2");
+        props.put("schema.registry.ssl.endpoint.identification.algorithm", "");
 
         return props;
     }
