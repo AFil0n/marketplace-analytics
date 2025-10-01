@@ -22,7 +22,7 @@ kafka-topics --bootstrap-server $KAFKA_BROKER --create \
   --command-config $CLIENT_CONFIG
 
 kafka-topics --bootstrap-server $KAFKA_BROKER --create \
-  --topic topic-2 --partitions 2 --replication-factor 2 \
+  --topic clientTopic --partitions 2 --replication-factor 2 \
   --command-config $CLIENT_CONFIG
 
 # Настройка ACL для пользователей
@@ -58,15 +58,34 @@ kafka-acls --bootstrap-server $KAFKA_BROKER \
   --group consumer-group \
   --command-config $CLIENT_CONFIG
 
-# Для topic-2 (пример с ограничением доступа)
+# Для clientTopic
 kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:producer \
-  --operation WRITE --topic topic-2 \
+  --add --allow-principal User:producerClient \
+  --operation WRITE --topic clientTopic \
   --command-config $CLIENT_CONFIG
 
 kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --deny-principal User:consumer \
-  --operation READ --topic topic-2 \
+  --add --allow-principal User:consumerClient \
+  --operation READ \
+  --topic clientTopic \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation DESCRIBE \
+  --topic clientTopic \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation READ \
+  --group consumerClient-group \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation DESCRIBE \
+  --group consumerClient-group \
   --command-config $CLIENT_CONFIG
 
 
