@@ -563,21 +563,14 @@ services:
     container_name: postgres
     environment:
       POSTGRES_DB: appdb
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: md5
     ports:
-      - "5432:5432"
-    networks:
-      - yandex-practicum-kafka
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin -d appdb" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - "5434:5432"
+    volumes:
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4:7.8
@@ -784,6 +777,8 @@ volumes:
   elasticsearch_data:
     driver: local
   postgres_data:
+    driver: local
+  postgres_data_new:
     driver: local
   pgadmin_data:
     driver: local
