@@ -4,7 +4,9 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.streams.StreamsConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +17,7 @@ public class KafkaProperties {
     private static final String SCHEMA_REGISTRY_URL = "http://schema-registry:8081";
     private static final String SHOP_PRODUCER_TOPIC_NAME = "shopTopic";
     private static final String TOPIC_BLOCKED_PRODUCTS = "shopStopList";
+    private static final String PRODUCTS_TOPIC_NAME = "products";
 
     public static String getShopProducerTopicName() {
         return SHOP_PRODUCER_TOPIC_NAME;
@@ -28,13 +31,54 @@ public class KafkaProperties {
         return TOPIC_BLOCKED_PRODUCTS;
     }
 
+    public static String getProductsTopicName() {
+        return PRODUCTS_TOPIC_NAME;
+    }
+
+    public static Properties getStreamsConfig(){
+        Properties props = new Properties();
+
+        // Основные настройки Kafka
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1090,kafka-1:2090");
+
+        // SSL настройки для Schema Registry
+        props.put("schema.registry.ssl.truststore.location", "");
+        props.put("schema.registry.ssl.truststore.type", "");
+        props.put("schema.registry.ssl.truststore.password", "");
+
+        // Настройки безопасности Kafka
+        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        props.put(SaslConfigs.SASL_JAAS_CONFIG,
+                "org.apache.kafka.common.security.plain.PlainLoginModule required " +
+                        "username=\"producer\" " +
+                        "password=\"password\";");
+
+        // SSL Config для Kafka
+        props.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
+        props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12");
+        props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "JKS");
+        props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
+                "/etc/kafka/secrets/kafka.truststore.jks");
+        props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "password");
+        props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
+                "/etc/kafka/secrets/kafka.keystore.pkcs12");
+        props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "password");
+        props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "password");
+
+        // Streams конфигурация
+        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
+
+        return props;
+    }
+
     public static Properties getProducerProperties() {
         Properties props = new Properties();
 
         // Основные настройки Kafka
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1090,kafka-1:2090");
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        props.put(ProducerConfig.RETRIES_CONFIG, 3);
 
         // СЕРИАЛИЗАТОРЫ - только один способ!
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -79,6 +123,8 @@ public class KafkaProperties {
         // Дополнительные настройки
         props.put(CommonClientConfigs.CLIENT_ID_CONFIG, "producer-app");
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.RETRIES_CONFIG, 3);
         props.put("schema.registry.log.service.errors", "true");
 
         return props;
