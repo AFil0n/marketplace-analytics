@@ -90,4 +90,20 @@ public class Product {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    public void setProduct_id(String digits) {
+        productId = digits;
+    }
+
+    public void setCreated_at(LocalDateTime localDateTime) {
+        createdAt = localDateTime;
+    }
+
+    public void setUpdated_at(LocalDateTime localDateTime) {
+        updatedAt = localDateTime;
+    }
+
+    public void setStore_id(String s) {
+        storeId = s;
+    }
 }

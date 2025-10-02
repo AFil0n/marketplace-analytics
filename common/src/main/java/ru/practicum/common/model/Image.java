@@ -50,4 +50,8 @@ public class Image {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public void setAlt(String sentence) {
+        this.altText = sentence;
+    }
 }

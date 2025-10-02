@@ -1,6 +1,5 @@
 package ru.practicum.common;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -8,9 +7,11 @@ import com.github.javafaker.Faker;
 import ru.practicum.common.model.Image;
 import ru.practicum.common.model.Price;
 import ru.practicum.common.model.Product;
+import ru.practicum.common.model.ProductSpecification;
 import ru.practicum.common.model.Stock;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,9 +57,9 @@ public class ProductGenerator {
             product.setBrand(faker.company().name());
             product.setStock(generateStock());
             product.setSku(faker.regexify("[A-Z]{3}-[0-9]{5}"));
-            product.setTags(generateTags());
+            product.setTags(new ArrayList<>());
             product.setImages(generateImages());
-            product.setSpecifications(generateSpecifications());
+            product.setSpecifications((List<ProductSpecification>) generateSpecifications());
             product.setCreated_at(generatePastDate(30));
             product.setUpdated_at(generatePastDate(10));
             product.setIndex("products");
@@ -74,7 +75,7 @@ public class ProductGenerator {
         Price price = new Price();
         double amount = 500 + (50000 - 500) * faker.random().nextDouble();
         amount = Math.round(amount * 100.0) / 100.0; // Округляем до 2 знаков после запятой
-        price.setAmount(amount);
+        price.setAmount(BigDecimal.valueOf(amount));
         price.setCurrency(faker.options().nextElement(CURRENCIES));
         return price;
     }
