@@ -14,6 +14,7 @@ public class KafkaProperties {
 
     private static final String SCHEMA_REGISTRY_URL = "http://schema-registry:8081";
     private static final String SHOP_PRODUCER_TOPIC_NAME = "shopTopic";
+    private static final String TOPIC_BLOCKED_PRODUCTS = "blocked-products";
 
     public static String getShopProducerTopicName() {
         return SHOP_PRODUCER_TOPIC_NAME;
@@ -21,6 +22,10 @@ public class KafkaProperties {
 
     public static String getSchemaRegistryUrl() {
         return SCHEMA_REGISTRY_URL;
+    }
+
+    public static String getTopicBlockedProducts() {
+        return TOPIC_BLOCKED_PRODUCTS;
     }
 
     public static Properties getProducerProperties() {
