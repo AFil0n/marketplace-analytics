@@ -27,7 +27,8 @@
 		<module>shop</module>
 		<module>shopProducer</module>
 		<module>shopStopListProducer</module>
-	</modules>
+        <module>shopProductFilterStream</module>
+    </modules>
 	<scm>
 		<connection/>
 		<developerConnection/>
