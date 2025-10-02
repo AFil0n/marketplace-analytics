@@ -708,7 +708,21 @@ services:
       schema-registry:
         condition: service_healthy
 
-
+  shop-stoplist-producer:
+    <<: *java-service
+    container_name: shopStopListProducer
+    build:
+      context: ./shopStopListProducer
+    ports:
+      - "1111:1111"
+    volumes:
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
+      - ./infra/stopList:/etc/data
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      schema-registry:
+        condition: service_healthy
 
 volumes:
   elasticsearch_data:
