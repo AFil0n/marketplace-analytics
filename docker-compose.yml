@@ -724,6 +724,21 @@ services:
       schema-registry:
         condition: service_healthy
 
+  shop-product-filter-stream:
+    <<: *java-service
+    container_name: shopProductFilterStream
+    build:
+      context: ./shopProductFilterStream
+    ports:
+      - "1112:1112"
+    volumes:
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      schema-registry:
+        condition: service_healthy
+
 volumes:
   elasticsearch_data:
     driver: local
