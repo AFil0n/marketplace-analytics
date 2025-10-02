@@ -28,7 +28,7 @@ kafka-topics --bootstrap-server $KAFKA_BROKER --create \
 # Настройка ACL для пользователей
 echo "Setting up ACLs..."
 
-# Для topic-1
+# Для shopTopic
 kafka-acls --bootstrap-server $KAFKA_BROKER \
   --add --allow-principal User:producer \
   --operation WRITE --topic shopTopic \
@@ -86,6 +86,37 @@ kafka-acls --bootstrap-server $KAFKA_BROKER \
   --add --allow-principal User:consumerClient \
   --operation DESCRIBE \
   --group consumerClient-group \
+  --command-config $CLIENT_CONFIG
+
+
+# Для shopStopList
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:producerClient \
+  --operation WRITE --topic shopStopList \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation READ \
+  --topic shopStopList \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation DESCRIBE \
+  --topic shopStopList \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation READ \
+  --group shopStopList-group \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation DESCRIBE \
+  --group shopStopList-group \
   --command-config $CLIENT_CONFIG
 
 
