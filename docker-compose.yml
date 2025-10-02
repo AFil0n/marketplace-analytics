@@ -516,48 +516,6 @@ services:
       - kafka-1
       - kafka-controller-0
 
-  elasticsearch:
-    image: elasticsearch:7.17.10
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - bootstrap.memory_lock=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    networks:
-      - yandex-practicum-kafka
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"'" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  kibana:
-    image: kibana:7.17.10
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    networks:
-      - yandex-practicum-kafka
-    depends_on:
-      - elasticsearch
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"level\":\"available\"'" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   postgres:
     image: postgres:15
     container_name: postgres
@@ -571,27 +529,6 @@ services:
     volumes:
       - ./infra/postgres/init:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
-
-  pgadmin:
-    image: dpage/pgadmin4:7.8
-    container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    ports:
-      - "8080:80"
-    networks:
-      - yandex-practicum-kafka
-    depends_on:
-      - postgres
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80/login" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.4.4
