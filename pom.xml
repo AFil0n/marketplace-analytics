@@ -26,6 +26,8 @@
 		<module>client</module>
 		<module>shop</module>
 		<module>shopProducer</module>
+        <module>shopStopListPriducer</module>
+		<module>shopStopListProducer</module>
 	</modules>
 	<scm>
 		<connection/>
