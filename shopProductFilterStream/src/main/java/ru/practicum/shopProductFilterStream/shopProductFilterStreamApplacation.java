@@ -27,6 +27,12 @@ public class shopProductFilterStreamApplacation {
         Properties props = KafkaProperties.getStreamsConfig();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "product-filter-app");
 
+        // Добавляем настройки для лучшей обработки ошибок
+        props.put(StreamsConfig.DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG,
+                "org.apache.kafka.streams.errors.LogAndContinueExceptionHandler");
+        props.put(StreamsConfig.DEFAULT_PRODUCTION_EXCEPTION_HANDLER_CLASS_CONFIG,
+                "org.apache.kafka.streams.errors.DefaultProductionExceptionHandler");
+
         StreamsBuilder builder = new StreamsBuilder();
 
         // Подписываемся на топик с заблокированными продуктами
@@ -38,7 +44,7 @@ public class shopProductFilterStreamApplacation {
                             JsonNode blockedProduct = mapper.readTree(value);
                             String productName = blockedProduct.get("name").asText();
                             blockedProductNames.add(productName);
-                            System.out.println("Blocked product added: " + productName +
+                            System.out.println("✅ Blocked product added: " + productName +
                                     ", total blocked: " + blockedProductNames.size());
                         }
                     } catch (Exception e) {
