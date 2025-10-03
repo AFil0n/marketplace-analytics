@@ -1,10 +1,12 @@
 package ru.practicum.common.config;
 
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
 
@@ -38,22 +40,36 @@ public class KafkaProperties {
     public static Properties getStreamsConfig(){
         Properties props = new Properties();
 
-        // Основные настройки Kafka (должны совпадать со скриптом создания топиков)
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1090,kafka-1:2090");
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "product-filter-app");
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1092,kafka-1:2092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "consumer-group");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+
+        // НАСТРОЙКИ ГРУППОВОГО ПРОТОКОЛА - ДОБАВЬТЕ ЭТО!
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 45000);
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 15000);
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000);
+        props.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 40000);
+        props.put(ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, 60000);
+
 
         // Настройки безопасности
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
         props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
         props.put(SaslConfigs.SASL_JAAS_CONFIG,
                 "org.apache.kafka.common.security.plain.PlainLoginModule required " +
-                        "username=\"consumer\" " +
-                        "password=\"password\";");
+                        "username=\"admin\" " +
+                        "password=\"admin\";");
 
-        // SSL настройки
+        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+
+        // SSL Config
         props.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/etc/kafka/secrets/kafka.truststore.jks");
         props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "password");
+        props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/etc/kafka/secrets/kafka.keystore.pkcs12");
+        props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "password");
+        props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "password");
 
         // Streams конфигурация
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
