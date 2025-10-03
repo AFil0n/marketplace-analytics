@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Используем kafka-0 как брокер, так как он доступен внутри сети Docker
-KAFKA_BROKER="kafka-0:1092,kafka-1:2092"
+KAFKA_BROKER="kafka-0:1090,kafka-1:2090"
 CLIENT_CONFIG="/etc/kafka/secrets/client.properties"
 
 # Ждем готовности Kafka
 echo "Waiting for Kafka brokers to be ready..."
-for broker in kafka-0:1092 kafka-1:2092; do
+for broker in kafka-0:1090 kafka-1:2090; do
   while ! nc -z $(echo $broker | tr ':' ' '); do
     echo "Waiting for $broker..."
     sleep 3
@@ -31,6 +31,10 @@ kafka-topics --bootstrap-server $KAFKA_BROKER --create \
 
 kafka-topics --bootstrap-server $KAFKA_BROKER --create \
   --topic products --partitions 2 --replication-factor 2 \
+  --command-config $CLIENT_CONFIG
+
+kafka-topics --bootstrap-server $KAFKA_BROKER --create \
+  --topic blocked-products --partitions 2 --replication-factor 2 \
   --command-config $CLIENT_CONFIG
 
 # Настройка ACL для пользователей
@@ -67,6 +71,20 @@ kafka-acls --bootstrap-server $KAFKA_BROKER \
   --command-config $CLIENT_CONFIG
 
 # Для clientTopic
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation READ \
+  --topic clientTopic \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation DESCRIBE \
+  --topic clientTopic \
+  --command-config $CLIENT_CONFIG
+
+
 kafka-acls --bootstrap-server $KAFKA_BROKER \
   --add --allow-principal User:producerClient \
   --operation WRITE --topic clientTopic \
@@ -116,19 +134,44 @@ kafka-acls --bootstrap-server $KAFKA_BROKER \
   --command-config $CLIENT_CONFIG
 
 kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:consumerClient \
+  --add --allow-principal User:consumer \
+  --operation READ \
+  --topic shopStopList \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation DESCRIBE \
+  --topic shopStopList \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
   --operation READ \
   --group shopStopList-group \
   --command-config $CLIENT_CONFIG
 
 kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:consumerClient \
+  --add --allow-principal User:consumer \
   --operation DESCRIBE \
   --group shopStopList-group \
   --command-config $CLIENT_CONFIG
 
 
 # Для products
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation READ \
+  --topic products \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation DESCRIBE \
+  --topic products \
+  --command-config $CLIENT_CONFIG
+
 kafka-acls --bootstrap-server $KAFKA_BROKER \
   --add --allow-principal User:producerClient \
   --operation WRITE --topic products \
@@ -158,6 +201,22 @@ kafka-acls --bootstrap-server $KAFKA_BROKER \
   --group products-group \
   --command-config $CLIENT_CONFIG
 
+
+# blocked-products
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:producer \
+  --operation WRITE --topic blocked-products \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation READ --topic blocked-products \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation DESCRIBE --topic blocked-products \
+  --command-config $CLIENT_CONFIG
 
 echo "Топики и ACL успешно настроены"
 
