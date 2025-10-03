@@ -16,7 +16,7 @@ public class KafkaProperties {
 
     private static final String SCHEMA_REGISTRY_URL = "http://schema-registry:8081";
     private static final String SHOP_PRODUCER_TOPIC_NAME = "shopTopic";
-    private static final String TOPIC_BLOCKED_PRODUCTS = "shopStopList";
+    private static final String TOPIC_BLOCKED_PRODUCTS = "blocked-products";
     private static final String PRODUCTS_TOPIC_NAME = "products";
 
     public static String getShopProducerTopicName() {
@@ -38,38 +38,26 @@ public class KafkaProperties {
     public static Properties getStreamsConfig(){
         Properties props = new Properties();
 
-        // Основные настройки Kafka
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1090,kafka-1:2090");
+        // Основные настройки Kafka (должны совпадать со скриптом создания топиков)
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1090,kafka-1:2090");
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "product-filter-app");
 
-        // SSL настройки для Schema Registry
-        props.put("schema.registry.ssl.truststore.location", "");
-        props.put("schema.registry.ssl.truststore.type", "");
-        props.put("schema.registry.ssl.truststore.password", "");
-
-        // Настройки безопасности Kafka
+        // Настройки безопасности
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
         props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
         props.put(SaslConfigs.SASL_JAAS_CONFIG,
                 "org.apache.kafka.common.security.plain.PlainLoginModule required " +
-                        "username=\"producer\" " +
+                        "username=\"consumer\" " +
                         "password=\"password\";");
 
-        // SSL Config для Kafka
+        // SSL настройки
         props.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
-        props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12");
-        props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "JKS");
-        props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-                "/etc/kafka/secrets/kafka.truststore.jks");
+        props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/etc/kafka/secrets/kafka.truststore.jks");
         props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "password");
-        props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
-                "/etc/kafka/secrets/kafka.keystore.pkcs12");
-        props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "password");
-        props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "password");
 
         // Streams конфигурация
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
-        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
 
         return props;
     }
