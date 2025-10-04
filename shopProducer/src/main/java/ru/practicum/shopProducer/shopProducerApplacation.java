@@ -83,10 +83,13 @@ public class shopProducerApplacation {
                     continue;
                 }
 
+                log.info("✅Будет создано {}:", products.size());
+
                 JsonFileManager.moveFile(path, readyDir);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
 
             for (Product product : products) {
                 try {
