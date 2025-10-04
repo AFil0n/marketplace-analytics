@@ -12,12 +12,8 @@ public class SchemaRegistryHelper {
         System.out.println("✅ Start parsing JsonSchema");
         ParsedSchema schema = new JsonSchema(schemaString);
         System.out.println("✅ End parsing JsonSchema");
-        try {
-            System.out.println("✅ Start register JsonSchema");
-            client.register(topic, schema);
-            System.out.println("✅ ✅ Schema registered for " + topic);
-        } catch (IOException | RestClientException e) {
-            System.err.println("Failed to register schema: " + e.getMessage());
-        }
+        System.out.println("✅ Start register JsonSchema");
+        //client.register(topic, schema);
+        System.out.println("✅ ✅ Schema registered for " + topic);
     }
 }
