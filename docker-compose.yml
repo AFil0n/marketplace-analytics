@@ -372,7 +372,7 @@ services:
               \"topics\": \".*\",
               \"topics.exclude\": \"_.*, __.*, .*[\\\\.]internal.*, .*[\\\\.]replica, __consumer_offsets\",
               \"sync.topic.configs.enabled\": \"true\",
-              \"sync.topic.acls.enabled\": \"false\",
+              \"sync.topic.acls.enabled\": \"true\",
               \"refresh.topics.enabled\": \"true\",
               \"refresh.topics.interval.seconds\": \"60\",
               \"replication.factor\": \"2\",
@@ -469,7 +469,7 @@ services:
       KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEY_PASSWORD: password
       KAFKA_CLUSTERS_0_PROPERTIES_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
     volumes:
-      - ./cert/kafka-dr-0-creds:/etc/kafka/secrets
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -634,6 +634,13 @@ services:
       # Plugin Path
       CONNECT_PLUGIN_PATH: "/usr/share/java,/etc/kafka-connect/jars"
       CONNECT_PLUGIN_DISCOVERY: "false"
+
+      KAFKA_OPTS: "
+          -Dorg.reflections.includePackages=
+          -Dorg.reflections.excludePackages=*
+          -Dreflections.scan.includePackages=
+          -Dreflections.scan.excludePackages=*
+        "
 
     volumes:
       - ./cert/kafka-0-creds:/etc/kafka/secrets
