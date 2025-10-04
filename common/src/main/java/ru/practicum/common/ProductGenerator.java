@@ -49,21 +49,21 @@ public class ProductGenerator {
         for (int i = 0; i < count; i++) {
             Product product = new Product();
 
-            product.setProduct_id(faker.number().digits(5));
-            product.setName(faker.commerce().productName());
-            product.setDescription(faker.lorem().sentence(10));
-            product.setPrice(generatePrice());
-            product.setCategory(faker.options().nextElement(CATEGORIES));
-            product.setBrand(faker.company().name());
-            product.setStock(generateStock());
-            product.setSku(faker.regexify("[A-Z]{3}-[0-9]{5}"));
-            product.setTags(new ArrayList<>());
-            product.setImages(generateImages());
-            product.setSpecifications((List<ProductSpecification>) generateSpecifications());
-            product.setCreated_at(generatePastDate(30));
-            product.setUpdated_at(generatePastDate(10));
-            product.setIndex("products");
-            product.setStore_id(faker.options().nextElement(STORE_IDS));
+//            product.setProduct_id(faker.number().digits(5));
+//            product.setName(faker.commerce().productName());
+//            product.setDescription(faker.lorem().sentence(10));
+//            product.setPrice(generatePrice());
+//            product.setCategory(faker.options().nextElement(CATEGORIES));
+//            product.setBrand(faker.company().name());
+//            product.setStock(generateStock());
+//            product.setSku(faker.regexify("[A-Z]{3}-[0-9]{5}"));
+//            product.setTags(new ArrayList<>());
+//            product.setImages(generateImages());
+//            product.setSpecifications((List<ProductSpecification>) generateSpecifications());
+//            product.setCreated_at(generatePastDate(30));
+//            product.setUpdated_at(generatePastDate(10));
+//            product.setIndex("products");
+//            product.setStore_id(faker.options().nextElement(STORE_IDS));
 
             products.add(product);
         }
