@@ -37,6 +37,10 @@ kafka-topics --bootstrap-server $KAFKA_BROKER --create \
   --topic blocked-products --partitions 2 --replication-factor 2 \
   --command-config $CLIENT_CONFIG
 
+  kafka-topics --bootstrap-server $KAFKA_BROKER --create \
+    --topic userQuery --partitions 2 --replication-factor 2 \
+    --command-config $CLIENT_CONFIG
+
 # Настройка ACL для пользователей
 echo "Setting up ACLs..."
 
@@ -216,6 +220,49 @@ kafka-acls --bootstrap-server $KAFKA_BROKER \
 kafka-acls --bootstrap-server $KAFKA_BROKER \
   --add --allow-principal User:consumer \
   --operation DESCRIBE --topic blocked-products \
+  --command-config $CLIENT_CONFIG
+
+
+# Для shopStopList
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:producerClient \
+  --operation WRITE --topic shopStopList \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation READ \
+  --topic userQuery \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumerClient \
+  --operation DESCRIBE \
+  --topic userQuery \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation READ \
+  --topic userQuery \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation DESCRIBE \
+  --topic userQuery \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation READ \
+  --group userQuery-group \
+  --command-config $CLIENT_CONFIG
+
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:consumer \
+  --operation DESCRIBE \
+  --group userQuery-group \
   --command-config $CLIENT_CONFIG
 
 echo "Топики и ACL успешно настроены"
