@@ -277,7 +277,7 @@ services:
       - kafka-dr-0
 
   kafka-mirrormaker:
-    image: confluentinc/cp-kafka-connect:7.4.4
+    image: confluentinc/cp-kafka-connect:7.5.0
     hostname: kafka-mirrormaker
     container_name: kafka-mirrormaker
     environment:
@@ -286,6 +286,7 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-mirrormaker
       CONNECT_REST_PORT: 8085
       CONNECT_GROUP_ID: mirror-maker-cluster
+      CONNECT_REST_ADVERTISED_PORT: 8085
 
       # Use String converters instead of ByteArray
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
@@ -346,10 +347,19 @@ services:
       - ./infra/mirrormaker/connect-log4j.properties:/etc/kafka-connect/connect-log4j.properties
     command: >
       bash -c "
-        echo 'Starting Kafka Connect with MirrorMaker 2.0...' &&
+        echo 'Starting Kafka Connect...' &&
         /etc/confluent/docker/run &
-        sleep 60 &&
-        echo 'Deploying MirrorMaker 2.0 connectors...' &&
+        CONNECT_PID=$$! &&
+      
+        echo 'Waiting for Connect to start...' &&
+        while ! curl -f -s http://localhost:8085/ > /dev/null; do
+          sleep 5
+        done &&
+        echo 'Kafka Connect started!' &&
+      
+        echo 'Creating MirrorMaker connectors...' &&
+      
+        # MirrorSource Connector
         curl -X POST -H 'Content-Type: application/json' \
           -d '{
             \"name\": \"mirror-source-connector\",
@@ -371,18 +381,15 @@ services:
               \"target.cluster.ssl.truststore.password\": \"password\",
               \"topics\": \".*\",
               \"topics.exclude\": \"_.*, __.*, .*[\\\\.]internal.*, .*[\\\\.]replica, __consumer_offsets\",
-              \"sync.topic.configs.enabled\": \"true\",
-              \"sync.topic.acls.enabled\": \"true\",
-              \"refresh.topics.enabled\": \"true\",
-              \"refresh.topics.interval.seconds\": \"60\",
               \"replication.factor\": \"2\",
-              \"tasks.max\": \"2\"
+              \"tasks.max\": \"1\"
             }
           }' \
           http://localhost:8085/connectors &&
-        echo 'MirrorSourceConnector deployed.' &&
+        echo 'MirrorSource connector created' &&
         sleep 5 &&
-
+      
+        # MirrorHeartbeat Connector
         curl -X POST -H 'Content-Type: application/json' \
           -d '{
             \"name\": \"mirror-heartbeat-connector\",
@@ -403,38 +410,13 @@ services:
             }
           }' \
           http://localhost:8085/connectors &&
-        echo 'MirrorHeartbeatConnector deployed.' &&
-        sleep 5 &&
-
-        curl -X POST -H 'Content-Type: application/json' \
-          -d '{
-            \"name\": \"mirror-checkpoint-connector\",
-            \"config\": {
-              \"connector.class\": \"org.apache.kafka.connect.mirror.MirrorCheckpointConnector\",
-              \"source.cluster.alias\": \"primary\",
-              \"target.cluster.alias\": \"dr\",
-              \"source.cluster.bootstrap.servers\": \"kafka-0:1092,kafka-1:2092\",
-              \"target.cluster.bootstrap.servers\": \"kafka-dr-0:3092,kafka-dr-1:3192\",
-              \"source.cluster.security.protocol\": \"SASL_SSL\",
-              \"source.cluster.sasl.mechanism\": \"PLAIN\",
-              \"source.cluster.sasl.jaas.config\": \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"admin\\\" password=\\\"admin\\\"\;\",
-              \"target.cluster.security.protocol\": \"SASL_SSL\",
-              \"target.cluster.sasl.mechanism\": \"PLAIN\",
-              \"target.cluster.sasl.jaas.config\": \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"admin\\\" password=\\\"admin\\\"\;\",
-              \"checkpoints.topic.replication.factor\": \"2\",
-              \"sync.group.offsets.enabled\": \"true\",
-              \"sync.group.offsets.interval.seconds\": \"60\",
-              \"emit.checkpoints.interval.seconds\": \"60\",
-              \"tasks.max\": \"1\"
-            }
-          }' \
-          http://localhost:8085/connectors &&
-        echo 'MirrorCheckpointConnector deployed.' &&
-        echo 'All MirrorMaker 2.0 connectors deployed successfully!' &&
-        tail -f /dev/null
+        echo 'MirrorHeartbeat connector created' &&
+      
+        echo 'All connectors created successfully!' &&
+        wait $$CONNECT_PID
       "
     ports:
-      - "8085:8085"
+      - "8085:8083"
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -590,6 +572,7 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
       CONNECT_REST_PORT: 8083
       CONNECT_GROUP_ID: connect-cluster
+
 
       # Storage Topics
       CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
