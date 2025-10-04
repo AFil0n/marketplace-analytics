@@ -20,7 +20,7 @@
     "target.cluster.ssl.endpoint.identification.algorithm": "",
     "topics": ".*",
     "groups": ".*",
-    "sync.topic.acls.enabled": "false",
+    "sync.topic.acls.enabled": "true",
     "emit.heartbeats.enabled": "true",
     "replication.factor": "2",
     "tasks.max": "1"
