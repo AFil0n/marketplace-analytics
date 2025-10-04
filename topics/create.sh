@@ -26,10 +26,6 @@ kafka-topics --bootstrap-server $KAFKA_BROKER --create \
   --command-config $CLIENT_CONFIG
 
 kafka-topics --bootstrap-server $KAFKA_BROKER --create \
-  --topic shopStopList --partitions 2 --replication-factor 2 \
-  --command-config $CLIENT_CONFIG
-
-kafka-topics --bootstrap-server $KAFKA_BROKER --create \
   --topic products --partitions 2 --replication-factor 2 \
   --command-config $CLIENT_CONFIG
 
@@ -117,50 +113,6 @@ kafka-acls --bootstrap-server $KAFKA_BROKER \
   --operation DESCRIBE \
   --group consumerClient-group \
   --command-config $CLIENT_CONFIG
-
-
-# Для shopStopList
-kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:producerClient \
-  --operation WRITE --topic shopStopList \
-  --command-config $CLIENT_CONFIG
-
-kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:consumerClient \
-  --operation READ \
-  --topic shopStopList \
-  --command-config $CLIENT_CONFIG
-
-kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:consumerClient \
-  --operation DESCRIBE \
-  --topic shopStopList \
-  --command-config $CLIENT_CONFIG
-
-kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:consumer \
-  --operation READ \
-  --topic shopStopList \
-  --command-config $CLIENT_CONFIG
-
-kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:consumer \
-  --operation DESCRIBE \
-  --topic shopStopList \
-  --command-config $CLIENT_CONFIG
-
-kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:consumer \
-  --operation READ \
-  --group shopStopList-group \
-  --command-config $CLIENT_CONFIG
-
-kafka-acls --bootstrap-server $KAFKA_BROKER \
-  --add --allow-principal User:consumer \
-  --operation DESCRIBE \
-  --group shopStopList-group \
-  --command-config $CLIENT_CONFIG
-
 
 # Для products
 
