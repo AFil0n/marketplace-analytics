@@ -87,9 +87,9 @@ public class shopProducerApplacation {
 
             for (Product product : products) {
                 try {
-                    Thread.sleep(1000L);
+                    Thread.sleep(3000L);
+                    producer.send(new ProducerRecord<>(KafkaProperties.getShopProducerTopicName(), product)).get();
                     log.info("Публикуем в {}: {}", KafkaProperties.getShopProducerTopicName(), product);
-                    producer.send(new ProducerRecord<>(KafkaProperties.getShopProducerTopicName(), product));
                 } catch (Exception e) {
                     log.error("Ошибка при публикации сообщения", e);
                 }
