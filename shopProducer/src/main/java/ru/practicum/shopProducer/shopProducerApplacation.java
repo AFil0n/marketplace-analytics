@@ -23,6 +23,7 @@ import java.util.Properties;
 @Slf4j
 public class shopProducerApplacation {
     private static final String dir = "/etc/data";
+    private static final String readyDir = "/etc/ready";
 
     private static final String SCHEMA_PATH = "/etc/schema/product.json";
 
@@ -81,6 +82,8 @@ public class shopProducerApplacation {
                     JsonFileManager.removeFile(path.toString());
                     continue;
                 }
+
+                JsonFileManager.moveFile(path, readyDir);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -94,6 +97,8 @@ public class shopProducerApplacation {
                     log.error("Ошибка при публикации сообщения", e);
                 }
             }
+
+
         }
     }
 }

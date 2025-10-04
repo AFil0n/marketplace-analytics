@@ -331,9 +331,9 @@ services:
       CONNECT_CONFIG_STORAGE_TOPIC: mm2-configs
       CONNECT_OFFSET_STORAGE_TOPIC: mm2-offsets
       CONNECT_STATUS_STORAGE_TOPIC: mm2-status
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 2
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 2
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 2
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
 
       # Logging Configuration
       CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.mirror=INFO,org.apache.kafka.connect=INFO"
@@ -520,6 +520,7 @@ services:
       - ./infra/schema:/etc/schema
       - ./cert/kafka-0-creds:/etc/kafka/secrets
       - ./data:/etc/data
+      - ./ready:/etc/ready
     networks:
       - yandex-practicum-kafka
     depends_on:

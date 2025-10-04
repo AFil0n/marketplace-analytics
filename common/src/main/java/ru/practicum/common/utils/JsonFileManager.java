@@ -167,4 +167,8 @@ public class JsonFileManager {
             throw new IOException("Файл не существует или является папкой: " + filePath);
         }
     }
+
+    public static void moveFile(Path path, String filePath) throws IOException {
+        Files.move(path, Paths.get(filePath));
+    }
 }
