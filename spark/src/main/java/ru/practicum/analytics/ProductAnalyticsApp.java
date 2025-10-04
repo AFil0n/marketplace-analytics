@@ -10,9 +10,8 @@ import org.apache.spark.sql.streaming.Trigger;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.Metadata;
 
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 public class ProductAnalyticsApp {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -24,7 +23,7 @@ public class ProductAnalyticsApp {
                 .config("spark.sql.adaptive.enabled", "true")
                 .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
                 .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-                .master("local[*]") // В production укажите ваш Spark master
+                .master("local[*]")
                 .getOrCreate();
 
         spark.sparkContext().setLogLevel("WARN");
@@ -49,14 +48,14 @@ public class ProductAnalyticsApp {
                 .option("kafka.ssl.keystore.password", "password")
                 .load();
 
-        // Схема для парсинга JSON данных
+        // Схема для парсинга JSON данных (исправленный конструктор)
         StructType productSchema = new StructType(new StructField[]{
-                new StructField("product_id", DataTypes.StringType, true),
-                new StructField("name", DataTypes.StringType, true),
-                new StructField("category", DataTypes.StringType, true),
-                new StructField("price", DataTypes.DoubleType, true),
-                new StructField("rating", DataTypes.DoubleType, true),
-                new StructField("timestamp", DataTypes.TimestampType, true)
+                new StructField("product_id", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("name", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("category", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("price", DataTypes.DoubleType, true, Metadata.empty()),
+                new StructField("rating", DataTypes.DoubleType, true, Metadata.empty()),
+                new StructField("timestamp", DataTypes.TimestampType, true, Metadata.empty())
         });
 
         // 2. Парсинг JSON и преобразование данных
@@ -68,7 +67,6 @@ public class ProductAnalyticsApp {
                 .filter(functions.col("product_id").isNotNull())
                 .withColumn("processing_time", functions.current_timestamp());
 
-        // 3. АНАЛИТИКА: Различные метрики и агрегации
 
         // Аналитика 1: Статистика по категориям
         Dataset<Row> categoryStats = products
@@ -113,29 +111,15 @@ public class ProductAnalyticsApp {
                 .withColumn("analysis_type", functions.lit("price_distribution"))
                 .withColumn("timestamp", functions.current_timestamp());
 
-        // Аналитика 4: Рекомендации на основе популярности категорий
-        Dataset<Row> categoryRecommendations = products
-                .groupBy("category")
-                .agg(
-                        functions.count("product_id").as("product_count"),
-                        functions.avg("rating").as("avg_rating"),
-                        functions.avg("price").as("avg_price")
-                )
-                .withColumn("recommendation_score",
-                        functions.col("product_count") * functions.col("avg_rating"))
-                .orderBy(functions.col("recommendation_score").desc())
-                .withColumn("recommendation_type", functions.lit("popular_category"))
-                .withColumn("timestamp", functions.current_timestamp());
 
-        // 4. ЗАПИСЬ В HDFS
 
         // Запись сырых данных в HDFS
         StreamingQuery rawDataQuery = products
                 .writeStream()
                 .outputMode("append")
                 .format("parquet")
-                .option("path", "hdfs://namenode:9000/data/products/raw")
-                .option("checkpointLocation", "hdfs://namenode:9000/checkpoints/products_raw")
+                .option("path", "hdfs://namenode:9820/data/products/raw")
+                .option("checkpointLocation", "hdfs://namenode:9820/checkpoints/products_raw")
                 .trigger(Trigger.ProcessingTime("1 minute"))
                 .start();
 
@@ -144,42 +128,14 @@ public class ProductAnalyticsApp {
                 .writeStream()
                 .outputMode("complete")
                 .format("parquet")
-                .option("path", "hdfs://namenode:9000/data/analytics/category_stats")
-                .option("checkpointLocation", "hdfs://namenode:9000/checkpoints/category_stats")
+                .option("path", "hdfs://namenode:9820/data/analytics/category_stats")
+                .option("checkpointLocation", "hdfs://namenode:9820/checkpoints/category_stats")
                 .trigger(Trigger.ProcessingTime("2 minutes"))
                 .start();
 
-        // 5. ЗАПИСЬ РЕКОМЕНДАЦИЙ В KAFKA
 
-        // Подготовка рекомендаций для Kafka
-        Dataset<Row> kafkaRecommendations = categoryRecommendations
-                .select(
-                        functions.struct(
-                                functions.col("category"),
-                                functions.col("recommendation_score"),
-                                functions.col("avg_rating"),
-                                functions.col("avg_price"),
-                                functions.col("recommendation_type"),
-                                functions.col("timestamp")
-                        ).as("value")
-                )
-                .select(functions.to_json(functions.col("value")).as("value"));
 
-        // Запись рекомендаций в Kafka
-        StreamingQuery kafkaQuery = kafkaRecommendations
-                .writeStream()
-                .outputMode("update")
-                .format("kafka")
-                .option("kafka.bootstrap.servers", "kafka-0:1092,kafka-1:2092")
-                .option("topic", "product-recommendations")
-                .option("checkpointLocation", "hdfs://namenode:9000/checkpoints/kafka_recommendations")
-                .option("kafka.security.protocol", "SASL_SSL")
-                .option("kafka.sasl.mechanism", "PLAIN")
-                .option("kafka.sasl.jaas.config",
-                        "org.apache.kafka.common.security.plain.PlainLoginModule required " +
-                                "username=\"admin\" password=\"admin\";")
-                .trigger(Trigger.ProcessingTime("3 minutes"))
-                .start();
+
 
         System.out.println("✅ All streaming queries started successfully");
 
