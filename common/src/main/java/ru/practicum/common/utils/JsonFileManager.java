@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -168,7 +169,15 @@ public class JsonFileManager {
         }
     }
 
-    public static void moveFile(Path path, String filePath) throws IOException {
-        Files.move(path, Paths.get(filePath));
+    public static void moveFile(Path sourcePath, String targetDir) throws IOException {
+        Path targetDirPath = Paths.get(targetDir);
+
+        // Создаем целевую директорию, если она не существует
+        if (!Files.exists(targetDirPath)) {
+            Files.createDirectories(targetDirPath);
+        }
+
+        Path targetPath = targetDirPath.resolve(sourcePath.getFileName());
+        Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
     }
 }
