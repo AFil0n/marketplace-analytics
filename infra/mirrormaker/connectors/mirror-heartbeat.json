@@ -1,0 +1,24 @@
+{
+  "name": "mirror-heartbeat-connector",
+  "config": {
+    "connector.class": "org.apache.kafka.connect.mirror.MirrorHeartbeatConnector",
+    "source.cluster.alias": "primary",
+    "target.cluster.alias": "dr",
+    "source.cluster.bootstrap.servers": "kafka-0:1092,kafka-1:2092",
+    "target.cluster.bootstrap.servers": "kafka-dr-0:3092,kafka-dr-1:3192",
+    "source.cluster.security.protocol": "SASL_SSL",
+    "source.cluster.sasl.mechanism": "PLAIN",
+    "source.cluster.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"admin\" password=\"admin\";",
+    "source.cluster.ssl.truststore.location": "/etc/kafka/secrets/kafka.truststore.jks",
+    "source.cluster.ssl.truststore.password": "password",
+    "source.cluster.ssl.endpoint.identification.algorithm": "",
+    "target.cluster.security.protocol": "SASL_SSL",
+    "target.cluster.sasl.mechanism": "PLAIN",
+    "target.cluster.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"admin\" password=\"admin\";",
+    "target.cluster.ssl.truststore.location": "/etc/kafka/secrets/kafka.truststore.jks",
+    "target.cluster.ssl.truststore.password": "password",
+    "target.cluster.ssl.endpoint.identification.algorithm": "",
+    "heartbeats.topic.replication.factor": "2",
+    "tasks.max": "1"
+  }
+}
