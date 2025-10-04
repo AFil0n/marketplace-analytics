@@ -336,8 +336,8 @@ services:
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
 
       # Logging Configuration
-      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.mirror=INFO,org.apache.kafka.connect=INFO"
-      CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.mirror=ERROR,org.apache.kafka.connect=ERROR"
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "ERROR"
 
       KAFKA_OPTS: "
             -Dorg.reflections.includePackages=
