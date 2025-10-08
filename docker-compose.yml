@@ -74,6 +74,8 @@ x-kafka_controller_dr:
 
 x-kafka_broker:
   &kafka_broker-env
+  KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"
+  KAFKA_JVM_PERFORMANCE_OPTS: "-XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=64m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
   KAFKA_PROCESS_ROLES: broker
   CLUSTER_ID: 'ciWo7IWazngRchmPES6q5A=='
   KAFKA_CONTROLLER_QUORUM_VOTERS: 4000@kafka-controller-0:4090
@@ -174,6 +176,7 @@ x-java-service: &java-service
     - yandex-practicum-kafka
   environment:
     KAFKA_BOOTSTRAP_SERVERS: "kafka-0:1090,kafka-1:2090"
+    KAFKA_HEAP_OPTS: "-Xmx256m -Xms128m"
   volumes:
     - ./cert/kafka-0-creds:/etc/kafka/secrets
 
@@ -205,6 +208,7 @@ services:
       KAFKA_NODE_ID: 1000
       KAFKA_LISTENERS: BROKER://:1090,INTERNAL://:1092
       KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-0:1090,INTERNAL://kafka-0:1092
+      KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -222,6 +226,7 @@ services:
       KAFKA_NODE_ID: 2000
       KAFKA_LISTENERS: BROKER://:2090,INTERNAL://:2092
       KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-1:2090,INTERNAL://kafka-1:2092
+      KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -254,6 +259,7 @@ services:
       KAFKA_NODE_ID: 3000
       KAFKA_LISTENERS: BROKER://:3090,INTERNAL://:3092
       KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-dr-0:3090,INTERNAL://kafka-dr-0:3092
+      KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -271,6 +277,7 @@ services:
       KAFKA_NODE_ID: 3100
       KAFKA_LISTENERS: BROKER://:3190,INTERNAL://:3192
       KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-dr-1:3190,INTERNAL://kafka-dr-1:3192
+      KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -282,8 +289,8 @@ services:
     container_name: kafka-mirrormaker
     environment:
       # Basic Configuration
-      KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
-      KAFKA_JVM_PERFORMANCE_OPTS: "-server -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent -Djava.awt.headless=true"
+      KAFKA_HEAP_OPTS: "-Xmx256m -Xms128m"
+      KAFKA_JVM_PERFORMANCE_OPTS: "-XX:MetaspaceSize=96m -XX:MaxMetaspaceSize=128m"
       CONNECT_BOOTSTRAP_SERVERS: "kafka-0:1092,kafka-1:2092"
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-mirrormaker
       CONNECT_REST_PORT: 8085
