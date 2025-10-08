@@ -37,6 +37,31 @@ kafka-topics --bootstrap-server $KAFKA_BROKER --create \
     --topic userQuery --partitions 2 --replication-factor 2 \
     --command-config $CLIENT_CONFIG
 
+
+
+    SYSTEM_TOPICS=(
+        "mm2-offset-syncs.dr.internal"
+        "dr.heartbeats"
+        "dr.checkpoints.internal"
+        "primary.heartbeats"
+        "primary.checkpoints.internal"
+        "mm2-configs.primary"
+        "mm2-offsets.primary"
+        "mm2-status.primary"
+        "heartbeats"
+        "checkpoints.internal"
+        "offset-syncs.internal"
+    )
+
+    for topic in "${SYSTEM_TOPICS[@]}"; do
+        echo "Creating topic: $topic"
+        kafka-topics --bootstrap-server kafka-dr-0:3090 \
+            --command-config /etc/kafka/secrets/client.properties \
+            --create --topic "$topic" \
+            --partitions 2 --replication-factor 2 \
+            --config cleanup.policy=compact 2>/dev/null && echo "✅ Created $topic" || echo "⚠️ Topic $topic may already exist"
+    done
+
 # Настройка ACL для пользователей
 echo "Setting up ACLs..."
 
