@@ -295,7 +295,7 @@ services:
     environment:
       KAFKA_HEAP_OPTS: "-Xmx2g -Xms1g"
       KAFKA_OPTS: "-Djavax.net.debug=ssl -Djava.security.debug=certpath"  # SSL debug
-    command: ["/start-mirror-maker.sh"]
+    command: ["/start.sh"]
     networks:
       - yandex-practicum-kafka
     depends_on:
