@@ -40,7 +40,11 @@ public class shopProductFilterStreamApplacation {
         serdeConfig.put("schema.registry.ssl.truststore.location", "");
         serdeConfig.put("schema.registry.ssl.truststore.password", "");
 
-
+        try {
+            Thread.sleep(10000L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
 
         // Обработка заблокированных продуктов с JSON Schema Serde
