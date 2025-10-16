@@ -283,7 +283,6 @@ services:
     depends_on:
       - kafka-dr-0
 
-
   mirror-maker:
     image: confluentinc/cp-kafka:7.4.4
     volumes:
@@ -522,8 +521,10 @@ volumes:
     driver: local
   spark_data:
     driver: local
-
-
+  postgres_data:
+    driver: local
+  grafana_data:
+    driver: local
 
 networks:
   yandex-practicum-kafka:

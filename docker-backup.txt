@@ -132,3 +132,216 @@
     depends_on:
       kafka-connect:
         condition: service_healthy
+
+
+
+
+          # Elasticsearch Stack
+          elasticsearch:
+            image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+            container_name: elasticsearch
+            environment:
+              - discovery.type=single-node
+              - xpack.security.enabled=false
+              - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+              - bootstrap.memory_lock=true
+            ports:
+              - "9200:9200"
+            networks:
+              - yandex-practicum-kafka
+
+          kibana:
+            image: docker.elastic.co/kibana/kibana:8.9.0
+            container_name: kibana
+            environment:
+              - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+            ports:
+              - "5601:5601"
+            networks:
+              - yandex-practicum-kafka
+            depends_on:
+              - elasticsearch
+
+          # PostgreSQL для Grafana
+          postgresql:
+            image: postgres:13
+            container_name: postgresql
+            environment:
+              POSTGRES_DB: kafka_data
+              POSTGRES_USER: kafka_user
+              POSTGRES_PASSWORD: kafka_password
+            ports:
+              - "5434:5434"
+            volumes:
+              - postgres_data:/var/lib/postgresql/data
+            networks:
+              - yandex-practicum-kafka
+
+          # Grafana
+          grafana:
+            image: grafana/grafana:9.5.0
+            container_name: grafana
+            environment:
+              - GF_SECURITY_ADMIN_PASSWORD=admin
+              - GF_INSTALL_PLUGINS=grafana-clock-panel
+            ports:
+              - "3000:3000"
+            volumes:
+              - grafana_data:/var/lib/grafana
+            networks:
+              - yandex-practicum-kafka
+            depends_on:
+              - postgresql
+
+          connector-registrar:
+            image: curlimages/curl:8.2.1
+            container_name: connector-registrar
+            volumes:
+              - ./connectors:/connectors
+            networks:
+              - yandex-practicum-kafka
+            depends_on:
+              kafka-connect:
+                condition: service_healthy
+            command: >
+              bash -c "
+                echo 'Waiting for Kafka Connect to be ready...'
+
+                # Ждем готовности Kafka Connect
+                until curl -f http://kafka-connect:8083/connectors; do
+                  echo 'Kafka Connect not ready, waiting...'
+                  sleep 10
+                done
+
+                echo 'Kafka Connect is ready! Registering connectors...'
+
+                # Регистрируем Elasticsearch коннектор
+                if ! curl -f http://kafka-connect:8083/connectors/elasticsearch-products-sink; then
+                  echo 'Registering Elasticsearch connector...'
+                  curl -X POST -H 'Content-Type: application/json' \
+                    --data @/connectors/elasticsearch-products-config.json \
+                    http://kafka-connect:8083/connectors
+                else
+                  echo 'Elasticsearch connector already exists'
+                fi
+
+                # Регистрируем PostgreSQL коннектор
+                if ! curl -f http://kafka-connect:8083/connectors/postgresql-products-sink; then
+                  echo 'Registering PostgreSQL connector...'
+                  curl -X POST -H 'Content-Type: application/json' \
+                    --data @/connectors/postgresql-products-config.json \
+                    http://kafka-connect:8083/connectors
+                else
+                  echo 'PostgreSQL connector already exists'
+                fi
+
+                echo 'Connector registration completed!'
+
+                # Бесконечный цикл для проверки состояния коннекторов
+                while true; do
+                  echo '=== Connectors Status ==='
+                  curl -s http://kafka-connect:8083/connectors | jq -r '.[]' | while read connector; do
+                    state=$$(curl -s http://kafka-connect:8083/connectors/$$connector/status | jq -r '.connector.state')
+                    echo \"Connector $$connector: $$state\"
+                  done
+                  sleep 60
+                done
+              "
+
+
+
+                kafka-connect:
+                  image: confluentinc/cp-kafka-connect:7.4.4
+                  hostname: kafka-connect
+                  container_name: kafka-connect
+                  ports:
+                    - "8083:8083"
+                  environment:
+                    # Basic Configuration
+                    CONNECT_BOOTSTRAP_SERVERS: "kafka-0:1092,kafka-1:2092"
+                    CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+                    CONNECT_REST_PORT: 8083
+                    CONNECT_GROUP_ID: connect-cluster
+
+                    # Storage Topics
+                    CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+                    CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+                    CONNECT_STATUS_STORAGE_TOPIC: connect-status
+                    CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 2
+                    CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 2
+                    CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 2
+
+                    # Converters
+                    CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+                    CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+                    CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+                    CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+                    # Security Configuration
+                    CONNECT_SECURITY_PROTOCOL: SASL_SSL
+                    CONNECT_SASL_MECHANISM: PLAIN
+                    CONNECT_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin";'
+
+                    # SSL Configuration
+                    CONNECT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
+                    CONNECT_SSL_TRUSTSTORE_PASSWORD: password
+                    CONNECT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pkcs12
+                    CONNECT_SSL_KEYSTORE_PASSWORD: password
+                    CONNECT_SSL_KEY_PASSWORD: password
+                    CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+
+                    # Producer/Consumer Security
+                    CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
+                    CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
+                    CONNECT_PRODUCER_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin";'
+                    CONNECT_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
+                    CONNECT_PRODUCER_SSL_TRUSTSTORE_PASSWORD: password
+
+                    CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_SSL
+                    CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
+                    CONNECT_CONSUMER_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin";'
+                    CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
+                    CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: password
+
+                    # Plugin Path
+                    CONNECT_PLUGIN_PATH: "/usr/share/java,/etc/kafka-connect/jars"
+                    CONNECT_PLUGIN_DISCOVERY: "false"
+
+                    # Elasticsearch Sink Configuration
+                    CONNECT_ES_CONNECTION_URL: "http://elasticsearch:9200"
+                    CONNECT_ES_BATCH_SIZE: 100
+                    CONNECT_ES_MAX_IN_FLIGHT_REQUESTS: 5
+
+                    # JDBC Sink Configuration
+                    CONNECT_JDBC_URL: "jdbc:postgresql://postgresql:5434/kafka_data"
+                    CONNECT_JDBC_USER: "kafka_user"
+                    CONNECT_JDBC_PASSWORD: "kafka_password"
+
+                    KAFKA_OPTS: "
+                          -Dorg.reflections.includePackages=
+                          -Dorg.reflections.excludePackages=*
+                          -Dreflections.scan.includePackages=
+                          -Dreflections.scan.excludePackages=*
+                          "
+                        volumes:
+                          - ./cert/kafka-0-creds:/etc/kafka/secrets
+                          - ./connectors:/etc/kafka-connect/jars
+                        networks:
+                          - yandex-practicum-kafka
+                        depends_on:
+                          - kafka-0
+                          - kafka-1
+                          - schema-registry
+                          - elasticsearch
+                          - postgresql
+                        healthcheck:
+                          test: [
+                            "CMD", "bash", "-c",
+                            "curl -f http://localhost:8083/connectors &&
+                                 curl -f http://localhost:8083/connectors/elasticsearch-products-sink/status | grep -q '\"state\":\"RUNNING\"' &&
+                                 curl -f http://localhost:8083/connectors/postgresql-products-sink/status | grep -q '\"state\":\"RUNNING\"'"
+                          ]
+                          interval: 30s
+                          timeout: 10s
+                          retries: 10
+                          start_period: 120s
