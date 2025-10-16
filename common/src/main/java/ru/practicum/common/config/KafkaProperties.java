@@ -142,10 +142,48 @@ public class KafkaProperties {
 
     public static Properties getConsumerProperties(String groupId) {
         Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
-        props.put("group.id", groupId);
-        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        // ОБЯЗАТЕЛЬНЫЕ НАСТРОЙКИ
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1092,kafka-1:2092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+
+        // СЕРИАЛИЗАТОРЫ
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+        // НАСТРОЙКИ ПОТРЕБИТЕЛЯ
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500);
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000);
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 45000);
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 15000);
+        props.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 40000);
+
+        // НАСТРОЙКИ БЕЗОПАСНОСТИ
+        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        props.put(SaslConfigs.SASL_JAAS_CONFIG,
+                "org.apache.kafka.common.security.plain.PlainLoginModule required " +
+                        "username=\"consumer\" " +
+                        "password=\"password\";");
+
+        // SSL НАСТРОЙКИ
+        props.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
+        props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/etc/kafka/secrets/kafka.truststore.jks");
+        props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "password");
+        props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/etc/kafka/secrets/kafka.keystore.pkcs12");
+        props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "password");
+        props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "password");
+
+        // НАСТРОЙКИ ISOLATION LEVEL (для чтения committed messages)
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+
+        // НАСТРОЙКИ РЕКОННЕКТА
+        props.put(CommonClientConfigs.RECONNECT_BACKOFF_MS_CONFIG, 1000);
+        props.put(CommonClientConfigs.RECONNECT_BACKOFF_MAX_MS_CONFIG, 10000);
+        props.put(CommonClientConfigs.RETRY_BACKOFF_MS_CONFIG, 1000);
+
         return props;
     }
 
