@@ -342,3 +342,169 @@ SSL/TLS шифрование
 Подключения: Управляются через try-with-resources
 
 Эта документация покрывает все аспекты работы Shop Producer Application для интеграции с вашим Kafka кластером.
+
+
+# Shop Product Filter Stream
+
+ShopProductFilterStreamApplication - это Kafka Streams приложение для фильтрации товаров в реальном времени. Приложение использует KTable для хранения заблокированных товаров и фильтрует входящий поток сообщений, отсеивая запрещенные продукты.
+
+## Архитектура
+Топология потоков:
+
+
+![img_2.png](img_2.png)
+
+
+
+
+## Компоненты:
+KStream - поток входящих товаров из топика shopTopic
+
+KTable - таблица заблокированных товаров из топика blocked-products
+
+Left Join - объединение потока с таблицей заблокированных товаров
+
+Filter - фильтрация заблокированных товаров
+
+## Конфигурация
+Основные параметры:
+```java
+private static final ObjectMapper mapper = new ObjectMapper();
+private static final AtomicLong blockedProductsCounter = new AtomicLong(0);
+```
+
+Топики:
+Входной топик: shopTopic - поток товаров для фильтрации
+
+Топик заблокированных товаров: blocked-products - KTable с запрещенными продуктами
+
+Выходной топик: products - отфильтрованные разрешенные товары
+
+### Рабочий процесс
+1. Инициализация KTable
+   ```java
+   KTable<String, String> blockedProductsTable = builder.table(
+   KafkaProperties.getTopicBlockedProducts(),
+   Consumed.with(Serdes.String(), Serdes.String()),
+   Materialized.as("blocked-products-store")
+   );
+   ```
+2. Мониторинг изменений KTable
+   Логирование добавления/удаления заблокированных товаров
+
+Подсчет общего количества заблокированных продуктов
+
+Отслеживание изменений в реальном времени
+
+3. Обработка основного потока товаров
+   Этапы обработки:
+   Парсинг входящих сообщений
+
+Валидация и очистка данных
+
+Left Join с KTable заблокированных товаров
+
+Фильтрация по статусу блокировки
+
+Отправка разрешенных товаров в выходной топик
+
+## Ключевые методы
+startStreamsProcessing()
+Назначение: Основной метод настройки и запуска потоковой обработки
+
+Функции:
+
+Создание StreamsBuilder
+
+Настройка KTable и KStream
+
+Определение топологии обработки
+
+Запуск и мониторинг Kafka Streams
+
+extractProductNameFromJson(JsonNode product)
+Назначение: Извлечение имени продукта из JSON
+
+Поля поиска: name, productName, product, title, itemName
+
+Возвращает: Имя продукта или null
+
+cleanInput(String input)
+Назначение: Очистка и валидация входных данных
+
+Функции:
+
+Удаление контрольных символов
+
+Проверка структуры JSON
+
+Обработка Avro magic bytes
+
+startMetricsLogger(KafkaStreams streams)
+Назначение: Периодический вывод метрик приложения
+
+Интервал: 30 секунд
+
+Метрики: Количество заблокированных товаров, метрики Kafka Streams
+
+## Логирование и мониторинг
+Ключевые события:
+Обработка товаров:
+>>> NEW PRODUCT ARRIVED <<< - получен новый товар
+
+🔍 JOINING PRODUCT WITH BLOCKED LIST - проверка блокировки
+
+🎉 PRODUCT ALLOWED - товар разрешен
+
+🚷 PRODUCT BLOCKED - товар заблокирован
+
+KTable изменений:
+➕ BLOCKED PRODUCT ADDED/UPDATED - добавлен заблокированный товар
+
+🗑️ BLOCKED PRODUCT REMOVED - удален из блокировки
+
+📊 CURRENT BLOCKED PRODUCTS COUNT - текущее количество
+
+Системные события:
+🔄 KAFKA STREAMS STATE CHANGE - изменение состояния приложения
+
+📈 METRICS - периодические метрики
+
+🛑 Shutting down streams application - graceful shutdown
+
+## Класс ProcessingResult
+Назначение:
+Хранение результатов обработки для передачи между операциями Streams.
+
+Поля:
+productValue - исходное значение товара
+
+allowed - флаг разрешения
+
+reason - причина решения
+
+## Особенности реализации
+State Management:
+KTable Materialization: blocked-products-store
+
+Atomic Counter: blockedProductsCounter для быстрого доступа к количеству
+
+Error Handling:
+Uncaught Exception Handler: Ловит необработанные исключения
+
+Graceful Shutdown: 30-секундный таймаут для закрытия
+
+Data Validation: Проверка и очистка входных данных
+
+Performance:
+Left Join: Эффективное объединение потока с таблицей
+
+Filter Early: Ранняя фильтрация невалидных данных
+
+Incremental Updates: KTable автоматически обновляется
+
+## Запуск и управление
+Запуск:
+```bash
+docker-compose ud -d shop-product-filter-stream
+```
