@@ -1,0 +1,119 @@
+{
+	"info": {
+		"_postman_id": "dbfd514c-a701-4acf-ab4b-53dbfdf9a7a0",
+		"name": "StopList API Tests",
+		"description": "Тесты для REST API управления стоп-листом продуктов",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44576792"
+	},
+	"item": [
+		{
+			"name": "Get StopList",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/stop-list",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"stop-list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Product to StopList",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"test_product_1\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/stop-list",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"stop-list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Run Producer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/stop-list/run",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"stop-list",
+						"run"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Remove Product from StopList",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"test_product_1\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/stop-list",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"stop-list"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:1111/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "contentType",
+			"value": "application/json",
+			"type": "string"
+		}
+	]
+}
