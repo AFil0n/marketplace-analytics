@@ -463,6 +463,21 @@ services:
       retries: 5
       start_period: 60s
 
+  postgresql:
+    image: postgres:15-alpine
+    container_name: postgresql
+    environment:
+      POSTGRES_DB: kafka_data
+      POSTGRES_USER: kafka_user
+      POSTGRES_PASSWORD: kafka_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./infra/postgres_data:/var/lib/postgresqlkafka/data
+    networks:
+      - yandex-practicum-kafka
+
   shopproducer:
     <<: *java-service
     container_name: shopProducer

@@ -163,19 +163,7 @@
               - elasticsearch
 
           # PostgreSQL для Grafana
-          postgresql:
-            image: postgres:13
-            container_name: postgresql
-            environment:
-              POSTGRES_DB: kafka_data
-              POSTGRES_USER: kafka_user
-              POSTGRES_PASSWORD: kafka_password
-            ports:
-              - "5434:5434"
-            volumes:
-              - postgres_data:/var/lib/postgresql/data
-            networks:
-              - yandex-practicum-kafka
+
 
           # Grafana
           grafana:
