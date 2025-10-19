@@ -193,3 +193,152 @@ docker-compose restart kafka-0
 # Модули
 
 ## shopProducer
+
+ShopProducerApplication - это Java-приложение для пакетной обработки JSON-файлов с товарами и их публикации в Apache Kafka топик. Приложение автоматически регистрирует схему данных в Schema Registry и обрабатывает файлы из указанной директории.
+
+## Архитектура
+Основные компоненты:
+Kafka Producer - отправка сообщений в Kafka
+
+Schema Registry Client - регистрация и валидация схем данных
+
+File Watcher - мониторинг директории на наличие новых файлов
+
+JSON Parser - парсинг товаров из JSON файлов
+
+## Структура директорий
+text
+/etc/
+├── data/          # Входная директория для новых JSON файлов
+├── ready/         # Директория для обработанных файлов  
+└── schema/
+└── product.json  # JSON схема для валидации товаров
+
+## Конфигурация
+Параметры приложения:
+```java
+private static final String INPUT_DIR = "/etc/data";
+private static final String PROCESSED_DIR = "/etc/ready";
+private static final String SCHEMA_PATH = "/etc/schema/product.json";
+private static final long POLL_INTERVAL_MS = 5000L;
+private static final long MESSAGE_DELAY_MS = 1000L;
+```
+
+Параметры Kafka (через KafkaProperties):
+KafkaProperties.getProducerProperties() - настройки продюсера
+
+KafkaProperties.getSchemaRegistryUrl() - URL Schema Registry
+
+KafkaProperties.getShopProducerTopicName() - название топика
+
+## Рабочий процесс
+1. Инициализация
+
+![img.png](img.png)
+
+
+2. Обработка файлов
+
+![img_1.png](img_1.png)
+
+
+## Методы
+main(String[] args)
+Назначение: Точка входа приложения
+
+Поток: Инициализация продюсера → регистрация схемы → запуск обработки файлов
+
+registerSchema()
+Назначение: Регистрация JSON схемы в Schema Registry
+
+Использует: CachedSchemaRegistryClient
+
+Схема: Читается из файла /etc/schema/product.json
+
+loadSchemaFromFile()
+Назначение: Загрузка схемы из файловой системы
+
+Возвращает: JSON схему как строку
+
+getFileProducts(String path)
+Назначение: Парсинг списка товаров из JSON файла
+
+Использует: Jackson ObjectMapper
+
+Возвращает: List<Product> или null при ошибке
+
+publishingProducts(Producer<String, Product> producer)
+Назначение: Основной цикл обработки файлов
+
+Логика:
+
+Поиск JSON файлов в входной директории
+
+Парсинг товаров из файла
+
+Последовательная публикация каждого товара в Kafka
+
+Перемещение обработанного файла
+
+Пауза между проверками новых файлов
+
+## Логирование
+Приложение использует SLF4J для логирования ключевых событий:
+
+✅Будет создано {}: - количество товаров для публикации
+
+Публикуем в {}: {} - успешная публикация сообщения
+
+Ошибка при публикации сообщения - ошибки при отправке в Kafka
+
+Не удалось получить из файла: {} - проблемы с чтением файла
+
+
+🚀 Запуск
+Требования:
+Apache Kafka кластер с включенным Schema Registry
+
+SSL сертификаты (если используется SSL)
+
+SASL аутентификация (если настроена)
+
+Команда запуска:
+```bash
+docker-compose ud -d shopproducer
+```
+
+## Обработка ошибок
+Ошибки парсинга JSON: Файл пропускается, ошибка логируется
+
+Ошибки подключения к Kafka: Retry логика через Kafka Producer
+
+Ошибки Schema Registry: Приложение останавливается с исключением
+
+Проблемы с файловой системой: Логируются, продолжается работа
+ 
+## Производительность
+Задержка между сообщениями: 1000 мс
+
+Интервал проверки файлов: 5000 мс
+
+Размер пула Schema Registry: 10 соединений
+
+Обработка в одном потоке
+
+## Безопасность
+Приложение использует те же настройки безопасности, что и основной Kafka кластер:
+
+SASL/PLAIN аутентификация
+
+SSL/TLS шифрование
+
+Настройки через KafkaProperties
+
+## Управление состоянием
+Статус файлов: Отслеживается через перемещение между директориями
+
+Схемы: Кэшируются Schema Registry клиентом
+
+Подключения: Управляются через try-with-resources
+
+Эта документация покрывает все аспекты работы Shop Producer Application для интеграции с вашим Kafka кластером.
