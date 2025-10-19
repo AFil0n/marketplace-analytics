@@ -24,7 +24,7 @@
 	<modules>
 		<module>common</module>
 		<module>client</module>
-		<module>shop</module>
+		<module>shopConsumer</module>
 		<module>shopProducer</module>
 		<module>shopStopListProducer</module>
         <module>shopProductFilterStream</module>
