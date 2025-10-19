@@ -32,10 +32,8 @@ public class StopListController {
         return stopListService.getStopListItems();
     }
 
-    @GetMapping
+    @PostMapping("/run")
     public void runShopStopListProducer() {
         stopListService.runShopStopListProducer();
     }
-
-
 }
