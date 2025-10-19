@@ -2,17 +2,24 @@ package ru.practicum.shopStopListProducer.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.DeleteRecordsResult;
+import org.apache.kafka.clients.admin.RecordsToDelete;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.stereotype.Service;
 import ru.practicum.common.config.KafkaProperties;
+
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -41,32 +48,7 @@ public class StopListService {
 
     public String createStopListItem(String name) {
         this.stopList.add(name);
-        Properties props = KafkaProperties.getProducerProperties();
-
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-
-        // Выносим создание сообщения до создания producer
-        String jsonMessage = String.format("{\"name\": \"%s\"}", name);
-
-        try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
-            ProducerRecord<String, String> record =
-                    new ProducerRecord<>(KafkaProperties.getTopicBlockedProducts(), name, jsonMessage);
-
-            // Используем callback для асинхронной отправки
-            producer.send(record, (metadata, exception) -> {
-                if (exception != null) {
-                    log.error("Error sending message to Kafka: " + exception.getMessage(), exception);
-                } else {
-                    log.info("Successfully sent blocked product: {} to topic {}, partition {}, offset {}",
-                            name, metadata.topic(), metadata.partition(), metadata.offset());
-                }
-            });
-
-        } catch (Exception e) {
-            log.error("Error in Kafka producer: " + e.getMessage(), e);
-            return "Error: " + e.getMessage();
-        }
+        runShopStopListProducer();
 
         return "Успешно добавлен '" + name + "' в кафка";
     }
@@ -81,29 +63,25 @@ public class StopListService {
         String jsonMessage = String.format("{\"action\": \"delete\", \"name\": \"%s\"}", name);
 
         this.stopList.remove(name);
-        try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
-            ProducerRecord<String, String> record =
-                    new ProducerRecord<>(KafkaProperties.getTopicBlockedProducts(), name, jsonMessage);
-
-            producer.send(record, (metadata, exception) -> {
-                if (exception != null) {
-                    log.error("Error sending delete message to Kafka: " + exception.getMessage(), exception);
-                } else {
-                    log.info("Successfully sent delete request for product: {} to topic {}, partition {}, offset {}",
-                            name, metadata.topic(), metadata.partition(), metadata.offset());
-                }
-            });
-
-        } catch (Exception e) {
-            log.error("Error in Kafka producer while deleting: " + e.getMessage(), e);
-            return "Error: " + e.getMessage();
-        }
+        runShopStopListProducer();
 
         return "Delete request for product '" + name + "' successfully sent to Kafka";
     }
 
     public List<String> getStopListItems() {
         return stopList;
+    }
+
+    private void sendClearMessage(KafkaProducer<String, String> producer) {
+        try {
+            String clearMessage = "{\"action\": \"clear_all\"}";
+            ProducerRecord<String, String> clearRecord =
+                    new ProducerRecord<>(KafkaProperties.getTopicBlockedProducts(), "CLEAR", clearMessage);
+            producer.send(clearRecord).get();
+            System.out.println("Clear message sent");
+        } catch (Exception e) {
+            System.err.println("Error sending clear message: " + e.getMessage());
+        }
     }
 
     public void runShopStopListProducer() {
@@ -113,6 +91,8 @@ public class StopListService {
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+            sendClearMessage(producer);
+
             for(String line : stopList){
                 String name = line.trim().replace(",", "");
 
