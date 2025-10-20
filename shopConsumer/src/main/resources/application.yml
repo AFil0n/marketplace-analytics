@@ -1,5 +1,5 @@
 server:
-  port: 4444
+  port: 1122
 
 spring:
   application:
@@ -9,6 +9,18 @@ spring:
     url: jdbc:postgresql://postgresql:5432/kafka_data
     username: kafka_user
     password: kafka_password
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        format_sql: true
+    packages-to-scan: ru.practicum.common.model
+    sql:
+      init:
+        mode: always
 
 jpa:
   hibernate:
