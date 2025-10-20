@@ -1,4 +1,4 @@
-package ru.practicum.common.model;
+package ru.practicum.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientRequest {
+public class ClientRequestDTO {
     private Long userID;
     private String request;
 }

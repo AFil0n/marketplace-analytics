@@ -1,4 +1,4 @@
-package ru.practicum.common.model;
+package ru.practicum.common.dto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,27 +18,22 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "product_specifications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductSpecification {
+public class ProductTagDTO {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "product_id")
-    private Product product;
+    private ProductDTO product;
 
-    @Column(name = "spec_key", nullable = false, length = 100)
-    private String key;
-
-    @Column(name = "spec_value", columnDefinition = "TEXT")
-    private String value;
+    @Column(nullable = false, length = 100)
+    private String tag;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
