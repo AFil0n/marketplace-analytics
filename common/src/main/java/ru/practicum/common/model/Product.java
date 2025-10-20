@@ -1,62 +1,75 @@
 package ru.practicum.common.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Entity
+@Table(name = "products", schema = "shop")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Product {
-    @JsonProperty("product_id")
+
+    @Id
+    @EqualsAndHashCode.Include
     private String productId;
 
+    @Column(nullable = false)
     private String name;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Embedded
     private Price price;
+
+    @Column(nullable = false)
     private String category;
+
     private String brand;
+
+    @Embedded
     private Stock stock;
+
+    @Column(unique = true)
     private String sku;
-    private List<String> tags;
-    private List<Image> images;
-    private Map<String, Object> specifications;
 
-    @JsonProperty("created_at")
-    private LocalDateTime createdAt;
+    @ElementCollection
+    @CollectionTable(
+            name = "product_tags",
+            schema = "shop",
+            joinColumns = @JoinColumn(name = "product_id")
+    )
+    @Column(name = "tag")
+    private List<String> tags = new ArrayList<>();
 
-    @JsonProperty("updated_at")
-    private LocalDateTime updatedAt;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Image> images = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(
+            name = "product_specifications",
+            schema = "shop",
+            joinColumns = @JoinColumn(name = "product_id")
+    )
+    @MapKeyColumn(name = "spec_key")
+    @Column(name = "spec_value")
+    private Map<String, String> specifications;
 
     private String index;
 
-    @JsonProperty("store_id")
+    @Column(name = "store_id")
     private String storeId;
 
-    @Data
-    public static class Price {
-        private Double amount;
-        private String currency;
-    }
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @Data
-    public static class Stock {
-        private Integer available;
-        private Integer reserved;
-    }
-
-    @Data
-    public static class Image {
-        private String url;
-        private String alt;
-    }
-
-    @Override
-    public String toString(){
-        return "Product{" +
-                "id=" + productId +
-                ", name='" + name + '\'' +
-                ", price=" + price +
-                ", category='" + category + '\'';
-    }
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

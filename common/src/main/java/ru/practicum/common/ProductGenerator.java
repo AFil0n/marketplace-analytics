@@ -4,11 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.javafaker.Faker;
-import ru.practicum.common.model.Image;
-import ru.practicum.common.model.Price;
-import ru.practicum.common.model.Product;
-import ru.practicum.common.model.ProductSpecification;
-import ru.practicum.common.model.Stock;
+import ru.practicum.common.dto.ImageDTO;
+import ru.practicum.common.dto.PriceDTO;
+import ru.practicum.common.dto.ProductDTO;
+import ru.practicum.common.dto.StockDTO;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -43,11 +42,11 @@ public class ProductGenerator {
     private static final List<String> CURRENCIES = Arrays.asList("RUB", "USD", "EUR", "GBP");
     private static final List<String> STORE_IDS = Arrays.asList("store_001", "store_002", "store_003", "store_004");
 
-    public static List<Product> generateProducts(int count) {
-        List<Product> products = new ArrayList<>();
+    public static List<ProductDTO> generateProducts(int count) {
+        List<ProductDTO> products = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
-            Product product = new Product();
+            ProductDTO product = new ProductDTO();
 
 //            product.setProduct_id(faker.number().digits(5));
 //            product.setName(faker.commerce().productName());
@@ -59,7 +58,7 @@ public class ProductGenerator {
 //            product.setSku(faker.regexify("[A-Z]{3}-[0-9]{5}"));
 //            product.setTags(new ArrayList<>());
 //            product.setImages(generateImages());
-//            product.setSpecifications((List<ProductSpecification>) generateSpecifications());
+//            product.setSpecifications((List<ProductSpecificationDTO>) generateSpecifications());
 //            product.setCreated_at(generatePastDate(30));
 //            product.setUpdated_at(generatePastDate(10));
 //            product.setIndex("products");
@@ -71,8 +70,8 @@ public class ProductGenerator {
         return products;
     }
 
-    private static Price generatePrice() {
-        Price price = new Price();
+    private static PriceDTO generatePrice() {
+        PriceDTO price = new PriceDTO();
         double amount = 500 + (50000 - 500) * faker.random().nextDouble();
         amount = Math.round(amount * 100.0) / 100.0; // Округляем до 2 знаков после запятой
         price.setAmount(BigDecimal.valueOf(amount));
@@ -80,8 +79,8 @@ public class ProductGenerator {
         return price;
     }
 
-    private static Stock generateStock() {
-        Stock stock = new Stock();
+    private static StockDTO generateStock() {
+        StockDTO stock = new StockDTO();
         int available = faker.number().numberBetween(0, 500);
         stock.setAvailable(available);
         stock.setReserved(faker.number().numberBetween(0, available));
@@ -97,11 +96,11 @@ public class ProductGenerator {
         return tags;
     }
 
-    private static List<Image> generateImages() {
+    private static List<ImageDTO> generateImages() {
         int count = faker.number().numberBetween(1, 4);
-        List<Image> images = new ArrayList<>();
+        List<ImageDTO> images = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            Image image = new Image();
+            ImageDTO image = new ImageDTO();
             image.setUrl("https://example.com/images/" + faker.internet().slug() + ".jpg");
             image.setAlt(faker.lorem().sentence(3));
             images.add(image);
@@ -126,7 +125,7 @@ public class ProductGenerator {
         return LocalDateTime.now().minusDays(daysAgo);
     }
 
-    private static void saveToFile(List<Product> products, String filename) {
+    private static void saveToFile(List<ProductDTO> products, String filename) {
         try {
             // Создаем папку data если ее нет
             Path dataDir = Paths.get(DATA_DIR);
@@ -149,7 +148,7 @@ public class ProductGenerator {
     }
 
     public static void main(String[] args) {
-        List<Product> products = generateProducts(100000);
+        List<ProductDTO> products = generateProducts(100000);
 //        try {
 //            for (int i = 0; i < products.size(); i++) {
 //                System.out.println("=== ВСЕ ПРОДУКТЫ В ФОРМАТЕ JSON ===");
