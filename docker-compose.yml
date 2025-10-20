@@ -527,6 +527,21 @@ services:
       schema-registry:
         condition: service_healthy
 
+  shop-consumer:
+    <<: *java-service
+    container_name: shopConsumer
+    build:
+      context: ./shopConsumer
+    ports:
+      - "1122:1122"
+    volumes:
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      schema-registry:
+        condition: service_healthy
+
 volumes:
   hadoop_namenode:
     driver: local
