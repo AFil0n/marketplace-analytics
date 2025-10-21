@@ -11,15 +11,21 @@ public interface ProductMapper {
 
     ProductMapper INSTANCE = Mappers.getMapper(ProductMapper.class);
 
-    @Mapping(target = "price.amount", source = "price.amount")
-    @Mapping(target = "price.currency", source = "price.currency")
-    @Mapping(target = "stock.available", source = "stock.available")
-    @Mapping(target = "stock.reserved", source = "stock.reserved")
+    @Mapping(target = "specifications", source = "specifications")
+    @Mapping(target = "tags", source = "tags")
+    @Mapping(target = "images", source = "images")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "stock", source = "stock")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", source = "updatedAt")
     Product toEntity(ProductDTO dto);
 
-    @Mapping(target = "price.amount", source = "price.amount")
-    @Mapping(target = "price.currency", source = "price.currency")
-    @Mapping(target = "stock.available", source = "stock.available")
-    @Mapping(target = "stock.reserved", source = "stock.reserved")
+    @Mapping(target = "specifications", source = "specifications")
+    @Mapping(target = "tags", source = "tags")
+    @Mapping(target = "images", source = "images")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "stock", source = "stock")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", source = "updatedAt")
     ProductDTO toDto(Product entity);
 }

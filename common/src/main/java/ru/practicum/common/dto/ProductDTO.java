@@ -2,61 +2,56 @@ package ru.practicum.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import java.time.LocalDateTime;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 @Data
 public class ProductDTO {
+
     @JsonProperty("product_id")
     private String productId;
 
     private String name;
     private String description;
-    private Price price;
     private String category;
     private String brand;
-    private Stock stock;
     private String sku;
-    private List<String> tags;
-    private List<Image> images;
-    private Map<String, String> specifications;
-
-    @JsonProperty("created_at")
-    private LocalDateTime createdAt;
-
-    @JsonProperty("updated_at")
-    private LocalDateTime updatedAt;
-
-    private String index;
 
     @JsonProperty("store_id")
     private String storeId;
 
+    @JsonProperty("created_at")
+    private String createdAt;
+
+    @JsonProperty("updated_at")
+    private String updatedAt;
+
+    private String index;
+
+    private List<String> tags;
+    private List<ImageDTO> images;
+    private Map<String, String> specifications;
+
+    private PriceDTO price;
+    private StockDTO stock;
+
     @Data
-    public static class Price {
-        private Double amount;
+    public static class PriceDTO {
+        private BigDecimal amount;
         private String currency;
     }
 
     @Data
-    public static class Stock {
+    public static class StockDTO {
         private Integer available;
         private Integer reserved;
     }
 
     @Data
-    public static class Image {
+    public static class ImageDTO {
         private String url;
         private String alt;
-    }
-
-    @Override
-    public String toString(){
-        return "ProductDTO{" +
-                "id=" + productId +
-                ", name='" + name + '\'' +
-                ", price=" + price +
-                ", category='" + category + '\'';
     }
 }
