@@ -94,6 +94,7 @@ public class ConsumerService {
 
                         for (ConsumerRecord<String, ProductDTO> record : records) {
                             try {
+                                Thread.sleep(50L);
                                 // Данные УЖЕ десериализованы в ProductDTO!
                                 ProductDTO productDTO = record.value();
                                 Product product = productMapper.toEntity(productDTO);
