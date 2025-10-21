@@ -57,7 +57,7 @@ public class ShopProductFilterStreamApplication {
                         blockedProductsCounter.incrementAndGet();
                         try {
                             String productName = extractProductName(key, value);
-                            System.out.println("   Product details: " + productName);
+                            System.out.println("   ProductDTO details: " + productName);
                         } catch (Exception e) {
                             System.err.println("   Error parsing product details: " + e.getMessage());
                         }
