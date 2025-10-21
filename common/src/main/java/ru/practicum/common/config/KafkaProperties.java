@@ -9,6 +9,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
+import ru.practicum.common.dto.ProductDTO;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,7 @@ public class KafkaProperties {
         return PRODUCTS_TOPIC_NAME;
     }
 
-    public static Properties getStreamsConfig(){
+    public static Properties getStreamsConfig() {
         Properties props = new Properties();
 
         // ОБЯЗАТЕЛЬНЫЕ НАСТРОЙКИ
@@ -90,15 +91,15 @@ public class KafkaProperties {
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1090,kafka-1:2090");
 
         // СЕРИАЛИЗАТОРЫ - только один способ!
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.springframework.kafka.support.serializer.JsonSerializer");
 
         // Настройки Schema Registry
         props.put("schema.registry.url", SCHEMA_REGISTRY_URL);
-        props.put("basic.auth.credentials.source", "URL");
-        props.put("auto.register.schemas", "true");
+        //props.put("basic.auth.credentials.source", "URL");
+        props.put("auto.register.schemas", "false");
         props.put("use.latest.version", "true");
+        props.put("schema.compatibility", "NONE");
 
         props.put("json.fail.invalid.schema", "false");
         props.put("json.use.optional.for.non.required", "true");
@@ -106,9 +107,9 @@ public class KafkaProperties {
 
 
         // SSL настройки для Schema Registry
-        props.put("schema.registry.ssl.truststore.location", "");
-        props.put("schema.registry.ssl.truststore.type", "");
-        props.put("schema.registry.ssl.truststore.password", "");
+//        props.put("schema.registry.ssl.truststore.location", "");
+//        props.put("schema.registry.ssl.truststore.type", "");
+//        props.put("schema.registry.ssl.truststore.password", "");
 
         // Настройки безопасности Kafka
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
@@ -143,22 +144,18 @@ public class KafkaProperties {
     public static Properties getConsumerProperties(String groupId) {
         Properties props = new Properties();
 
-        // ОБЯЗАТЕЛЬНЫЕ НАСТРОЙКИ
+        // ОСНОВНЫЕ НАСТРОЙКИ
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1092,kafka-1:2092");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
 
-        // СЕРИАЛИЗАТОРЫ
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        // СЕРИАЛИЗАТОРЫ ДЛЯ JSON (БЕЗ SCHEMA REGISTRY)
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.springframework.kafka.support.serializer.JsonDeserializer");
 
-        // НАСТРОЙКИ ПОТРЕБИТЕЛЯ
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500);
-        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000);
-        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 45000);
-        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 15000);
-        props.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 40000);
+        // НАСТРОЙКИ JSON DESERIALIZER
+        props.put("spring.json.trusted.packages", "*");
+        props.put("spring.json.use.type.headers", "false");
+        props.put("spring.json.value.default.type", ProductDTO.class.getName());
 
         // НАСТРОЙКИ БЕЗОПАСНОСТИ
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
@@ -176,24 +173,55 @@ public class KafkaProperties {
         props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "password");
         props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "password");
 
-        // НАСТРОЙКИ ISOLATION LEVEL (для чтения committed messages)
-        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
-
-        // НАСТРОЙКИ РЕКОННЕКТА
-        props.put(CommonClientConfigs.RECONNECT_BACKOFF_MS_CONFIG, 1000);
-        props.put(CommonClientConfigs.RECONNECT_BACKOFF_MAX_MS_CONFIG, 10000);
-        props.put(CommonClientConfigs.RETRY_BACKOFF_MS_CONFIG, 1000);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         return props;
     }
 
-    public static Map<String, Object> getSchemaRegistryClientProps(){
+    public static Map<String, Object> getSchemaRegistryClientProps() {
         Map<String, Object> props = new HashMap<>();
         props.put("schema.registry.url", SCHEMA_REGISTRY_URL);
         props.put("basic.auth.credentials.source", "URL");
         props.put("schema.registry.ssl.truststore.location", "");
         props.put("schema.registry.ssl.truststore.password", "");
         props.put("schema.registry.ssl.endpoint.identification.algorithm", "");
+
+        return props;
+    }
+
+    public static Properties getProductsConsumerProperties(String groupId) {
+        Properties props = new Properties();
+
+        // ОБЯЗАТЕЛЬНЫЕ НАСТРОЙКИ
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:1092,kafka-1:2092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+
+        // ИСПРАВЛЕННЫЕ СЕРИАЛИЗАТОРЫ - используем String для JSON
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+        // НАСТРОЙКИ ПОТРЕБИТЕЛЯ
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000);
+
+        // НАСТРОЙКИ БЕЗОПАСНОСТИ KAFKA
+        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        props.put(SaslConfigs.SASL_JAAS_CONFIG,
+                "org.apache.kafka.common.security.plain.PlainLoginModule required " +
+                        "username=\"consumer\" " +
+                        "password=\"password\";");
+
+        // SSL НАСТРОЙКИ
+        props.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
+        props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/etc/kafka/secrets/kafka.truststore.jks");
+        props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "password");
+        props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/etc/kafka/secrets/kafka.keystore.pkcs12");
+        props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "password");
+        props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "password");
 
         return props;
     }
