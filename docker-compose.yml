@@ -478,6 +478,62 @@ services:
     networks:
       - yandex-practicum-kafka
 
+  ksqldb-server:
+    image: confluentinc/ksqldb-server:0.29.0
+    container_name: ksqldb-server
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: kafka-0:1090,kafka-1:2090
+
+      # Настройки безопасности Kafka
+      KSQL_SECURITY_PROTOCOL: SASL_SSL
+      KSQL_SASL_MECHANISM: PLAIN
+      KSQL_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin";
+
+      # SSL настройки
+      KSQL_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
+      KSQL_SSL_TRUSTSTORE_PASSWORD: password
+      KSQL_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pkcs12
+      KSQL_SSL_KEYSTORE_PASSWORD: password
+      KSQL_SSL_KEY_PASSWORD: password
+      KSQL_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+
+      # Дополнительные настройки
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_KSQL_STREAMS_AUTO_OFFSET_RESET: "earliest"
+
+      # Инициализационные скрипты
+      KSQL_KSQL_INIT_SCRIPT: /etc/ksql/init.sql
+
+    volumes:
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
+      - ./ksql/init.sql:/etc/ksql/init.sql  # Монтируем скрипт инициализации
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      - kafka-0
+      - kafka-1
+
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:0.29.0
+    container_name: ksqldb-cli
+    entrypoint: /bin/sh
+    tty: true
+    stdin_open: true
+    environment:
+      KSQL_SECURITY_PROTOCOL: SASL_SSL
+      KSQL_SASL_MECHANISM: PLAIN
+      KSQL_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin";
+    volumes:
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      - ksqldb-server
+
   shopproducer:
     <<: *java-service
     container_name: shopProducer

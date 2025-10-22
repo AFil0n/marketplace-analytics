@@ -28,7 +28,6 @@
 		<module>shopProducer</module>
 		<module>shopStopListProducer</module>
         <module>shopProductFilterStream</module>
-        <module>spark</module>
     </modules>
 	<scm>
 		<connection/>
