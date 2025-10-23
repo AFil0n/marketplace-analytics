@@ -22,7 +22,7 @@ public class UserQueryService {
     private final ObjectMapper objectMapper;
 
 
-    public void saveAndPublishUserQuery(String userId, String searchQuery) {
+    public void saveAndPublishUserQuery(Long userId, String searchQuery) {
         try {
             UserQuery userQuery = new UserQuery();
             userQuery.setUserId(userId);
@@ -37,7 +37,7 @@ public class UserQueryService {
             UserQueryDTO userQueryDTO = new UserQueryDTO(savedQuery);
             String userQueryJson = objectMapper.writeValueAsString(userQueryDTO);
 
-            kafkaTemplate.send("userQuery", userId, userQueryJson)
+            kafkaTemplate.send("userQuery", userId.toString(), userQueryJson)
                     .whenComplete((result, exception) -> {
                         if (exception == null) {
                             log.info("✅ User query published to Kafka: user={}, offset={}",
@@ -56,7 +56,7 @@ public class UserQueryService {
         return "";
     }
 
-    public List<String> findProduct(String userId, String query) {
+    public List<String> findProduct(Long userId, String query) {
         saveAndPublishUserQuery(userId, query);
         return productService.searchProducts(query);
     }

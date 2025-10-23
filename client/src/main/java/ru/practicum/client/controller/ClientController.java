@@ -51,7 +51,7 @@ public class ClientController {
     @GetMapping("/{userId}/search")
     public List<String> search(
             @RequestParam String query,
-            @RequestParam(required = false) String userId) {
+            @RequestParam(required = false) Long userId) {
         return userQueryService.findProduct(userId, query);
     }
 }
