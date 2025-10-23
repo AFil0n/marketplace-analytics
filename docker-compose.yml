@@ -598,6 +598,21 @@ services:
       schema-registry:
         condition: service_healthy
 
+  client:
+    <<: *java-service
+    container_name: client
+    build:
+      context: ./client
+    ports:
+      - "1113:1113"
+    volumes:
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      schema-registry:
+        condition: service_healthy
+
 volumes:
   hadoop_namenode:
     driver: local
