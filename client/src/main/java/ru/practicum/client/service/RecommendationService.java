@@ -1,4 +1,4 @@
-package ru.practicum.common.services;
+package ru.practicum.client.service;
 
 import lombok.extern.slf4j.Slf4j;
 
