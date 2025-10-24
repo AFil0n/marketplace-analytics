@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.dto.UserQueryDTO;
 import ru.practicum.client.model.UserQuery;
 import ru.practicum.client.repository.UserQueryRepository;
-import ru.practicum.common.services.ProductService;
 
 import java.util.List;
 
@@ -23,17 +23,13 @@ public class UserQueryService {
 
 
     public void saveAndPublishUserQuery(Long userId, String searchQuery) {
+        log.info("✅ Start work saveAndPublishUserQuery user={}, query={}", userId, searchQuery);
         try {
             UserQuery userQuery = new UserQuery();
             userQuery.setUserId(userId);
             userQuery.setSearchQuery(searchQuery);
 
-            UserQuery savedQuery = userQueryRepository.save(userQuery);
-
-            log.info("✅ User query saved to DB: id={}, user={}, query={}, results={}",
-                    savedQuery.getId(), userId, searchQuery);
-
-            // Отправляем в Kafka
+            var savedQuery = saveUserQuery(userQuery);
             UserQueryDTO userQueryDTO = new UserQueryDTO(savedQuery);
             String userQueryJson = objectMapper.writeValueAsString(userQueryDTO);
 
@@ -52,8 +48,14 @@ public class UserQueryService {
         }
     }
 
-    public String getUserRecomendation(String userId) {
-        return "";
+    @Transactional
+    public UserQuery saveUserQuery(UserQuery userQuery){
+        UserQuery savedQuery = userQueryRepository.saveAndFlush(userQuery);
+
+        log.info("✅ User query saved to DB: id={}, user={}, query={}, results={}",
+                savedQuery.getId(), userQuery.getUserId(), userQuery.getSearchQuery());
+
+        return savedQuery;
     }
 
     public List<String> findProduct(Long userId, String query) {
