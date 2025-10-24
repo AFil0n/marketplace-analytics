@@ -28,7 +28,7 @@ public class ClientController {
      */
     @GetMapping("/{userId}/recommendation")
     public ResponseEntity<Map<String, Object>> getUserRecommendation(
-            @PathVariable String userId) {
+            @PathVariable Long userId) {
         RecommendationConsumer.UserRecommendation recommendation =
                 recommendationConsumer.getRecommendation(userId);
 
@@ -50,8 +50,9 @@ public class ClientController {
      */
     @GetMapping("/{userId}/search")
     public List<String> search(
-            @RequestParam String query,
-            @RequestParam(required = false) Long userId) {
+            @PathVariable Long userId,
+            @RequestParam String query
+            ) {
         return userQueryService.findProduct(userId, query);
     }
 }
