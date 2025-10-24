@@ -1,0 +1,2 @@
+-- Data initialization script
+-- This file is intentionally left empty
