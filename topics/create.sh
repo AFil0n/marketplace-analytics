@@ -231,6 +231,17 @@ kafka-acls --bootstrap-server $KAFKA_BROKER \
   --group userQuery-group \
   --command-config $CLIENT_CONFIG
 
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:producer \
+  --operation WRITE --topic userQuery \
+  --command-config $CLIENT_CONFIG
+
+#user_recommendations
+kafka-acls --bootstrap-server $KAFKA_BROKER \
+  --add --allow-principal User:producer \
+  --operation WRITE --topic user_recommendations \
+  --command-config $CLIENT_CONFIG
+
 echo "Топики и ACL успешно настроены"
 
 sleep 30
