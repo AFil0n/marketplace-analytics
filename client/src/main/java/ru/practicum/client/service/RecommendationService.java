@@ -1,6 +1,7 @@
 package ru.practicum.client.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
+@Service
 public class RecommendationService {
 
     private final Map<String, List<String>> userPreferences;
@@ -67,10 +69,5 @@ public class RecommendationService {
 
     private List<String> getRelatedCategories(String category) {
         return categoryRelations.getOrDefault(category, Arrays.asList(category));
-    }
-
-    public void updateUserPreferences(String userId, String category) {
-        userPreferences.computeIfAbsent(userId, k -> new ArrayList<>()).add(category);
-        log.info("✅ Обновлены предпочтения пользователя {}: добавлена категория {}", userId, category);
     }
 }
