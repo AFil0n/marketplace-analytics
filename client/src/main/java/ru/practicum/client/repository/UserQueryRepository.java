@@ -11,5 +11,5 @@ import java.util.List;
 public interface UserQueryRepository extends JpaRepository<UserQuery, String> {
 
     @Query("SELECT uq.searchQuery FROM UserQuery uq WHERE uq.id in (SELECT max(q.id) FROM UserQuery q WHERE q.userId = :userId) ")
-    List<UserQuery> findRecentUserQuery(@Param("userId") String userId, @Param("id") Long id);
+    List<UserQuery> findRecentUserQuery(@Param("userId") Long userId, @Param("id") Long id);
 }
