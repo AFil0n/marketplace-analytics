@@ -37,6 +37,11 @@ kafka-topics --bootstrap-server $KAFKA_BROKER --create \
     --topic userQuery --partitions 2 --replication-factor 2 \
     --command-config $CLIENT_CONFIG
 
+ kafka-topics --bootstrap-server $KAFKA_BROKER --create \
+    --topic user_recommendations --partitions 2 --replication-factor 2 \
+    --command-config $CLIENT_CONFIG
+
+
     for topic in "${SYSTEM_TOPICS[@]}"; do
         echo "Creating topic: $topic"
         kafka-topics --bootstrap-server kafka-dr-0:3090 \
