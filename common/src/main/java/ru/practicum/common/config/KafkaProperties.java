@@ -105,12 +105,6 @@ public class KafkaProperties {
         props.put("json.use.optional.for.non.required", "true");
         props.put("oneof.for.nullables", "false");
 
-
-        // SSL настройки для Schema Registry
-//        props.put("schema.registry.ssl.truststore.location", "");
-//        props.put("schema.registry.ssl.truststore.type", "");
-//        props.put("schema.registry.ssl.truststore.password", "");
-
         // Настройки безопасности Kafka
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
         props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
