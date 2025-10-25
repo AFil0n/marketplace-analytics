@@ -1,0 +1,95 @@
+{
+	"info": {
+		"_postman_id": "3bd06e59-0ffb-4553-ac2d-e3a2adc2a6c8",
+		"name": "Product Search API",
+		"description": "Тесты для поиска товаров по имени",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44576792"
+	},
+	"item": [
+		{
+			"name": "Search Products with User ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1113/api/client/1/search?query=Ботинок",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1113",
+					"path": [
+						"api",
+						"client",
+						"1",
+						"search"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "Ботинок"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "User recomendations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1113/1/search?query=laptop",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1113",
+					"path": [
+						"1",
+						"search"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "laptop"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search Products without User ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1113/123/search?query=phone&userId=456",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1113",
+					"path": [
+						"123",
+						"search"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "phone"
+						},
+						{
+							"key": "userId",
+							"value": "456"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
