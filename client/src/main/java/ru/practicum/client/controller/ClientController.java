@@ -27,21 +27,16 @@ public class ClientController {
      * Получить рекомендацию для пользователя
      */
     @GetMapping("/{userId}/recommendation")
-    public ResponseEntity<Map<String, Object>> getUserRecommendation(
+    public List<String> getUserRecommendation(
             @PathVariable Long userId) {
         RecommendationConsumer.UserRecommendation recommendation =
                 recommendationConsumer.getRecommendation(userId);
 
         if (recommendation == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "No recommendation found for user: " + userId));
+            return List.of("error", "No recommendation found for user: " + userId);
         }
 
-        return ResponseEntity.ok(Map.of(
-                "user_id", userId,
-                "recommendation", recommendation.getRecommendationMessage(),
-                "type", recommendation.getRecommendationType()
-        ));
+        return userQueryService.findProduct(userId, recommendation.getRecommendationMessage());
     }
 
     /**
