@@ -1,9 +1,11 @@
 package ru.practicum.client.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import ru.practicum.client.model.UserQuery;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserQueryDTO {
     private Long userId;
     private String searchQuery;
