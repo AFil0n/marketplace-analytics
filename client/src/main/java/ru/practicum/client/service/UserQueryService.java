@@ -18,9 +18,8 @@ import java.util.List;
 public class UserQueryService {
     private final UserQueryRepository userQueryRepository;
     private final ProductService productService;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate; // Изменен тип
     private final ObjectMapper objectMapper;
-
 
     public void saveAndPublishUserQuery(Long userId, String searchQuery) {
         log.info("✅ Start work saveAndPublishUserQuery user={}, query={}", userId, searchQuery);
@@ -31,9 +30,9 @@ public class UserQueryService {
 
             var savedQuery = saveUserQuery(userQuery);
             UserQueryDTO userQueryDTO = new UserQueryDTO(savedQuery);
-            String userQueryJson = objectMapper.writeValueAsString(userQueryDTO);
 
-            kafkaTemplate.send("userQuery", userId.toString(), userQueryJson)
+            // Отправляем DTO объект напрямую, JsonSerializer сериализует его
+            kafkaTemplate.send("userQuery", userId.toString(), userQueryDTO)
                     .whenComplete((result, exception) -> {
                         if (exception == null) {
                             log.info("✅ User query published to Kafka: user={}, offset={}",
@@ -52,7 +51,7 @@ public class UserQueryService {
     public UserQuery saveUserQuery(UserQuery userQuery){
         UserQuery savedQuery = userQueryRepository.saveAndFlush(userQuery);
 
-        log.info("✅ User query saved to DB: id={}, user={}, query={}, results={}",
+        log.info("✅ User query saved to DB: id={}, user={}, query={}",
                 savedQuery.getId(), userQuery.getUserId(), userQuery.getSearchQuery());
 
         return savedQuery;
