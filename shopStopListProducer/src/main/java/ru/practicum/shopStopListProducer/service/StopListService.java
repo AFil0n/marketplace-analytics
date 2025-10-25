@@ -44,6 +44,8 @@ public class StopListService {
         } catch (IOException e) {
             System.err.println("Error reading file: " + e.getMessage());
         }
+
+        runShopStopListProducer();
     }
 
     public String createStopListItem(String name) {
