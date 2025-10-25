@@ -1,6 +1,59 @@
 Kafka Cluster with Disaster Recovery
 Этот проект разворачивает отказоустойчивый Apache Kafka кластер с поддержкой Disaster Recovery (DR) используя Docker Compose.
 
+> Данный проект писался в учебных целях, для Yandex Prcticum в нем много недоработок, использовать только примеры, но не саму реализацию!
+>> Работа всегда велась в вечернее время, после работы с 21 по 00, может содержать множество ошибок 
+# Запуск 
+```bash
+docker-compose up -d
+```
+Ждем пока не запустятся все сервисы
+
+# Тестирование
+В корне в директории tests скрипты для посман, но они минимальные
+
+
+## Основные технологии 
+
+### Kafka
+   - Apache Kafka
+   - Kafka Connect
+   - Kafka Streams
+   - KSQL/ksqlDB
+
+### Контейнеризация и оркестрация
+   - Docker
+   - Docker Compose
+
+### Языки программирования
+   - Java 17+
+   - Spring Boot
+   - SQL
+   - bash
+
+### Мониторинг
+   - Prometheus
+   - Grafana
+   - Alertmanager
+   - Kafka Exporter
+   - JMX Exporter
+
+### Базы данных и хранилища
+   - PostgreSQL
+   - Kafka Streams
+
+### Безопасность
+   - SSL/TLS
+   - SASL/PLAIN
+   - ACL
+   - PKCS12/JKS
+
+###  Веб-интерфейсы и API
+   - Kafka UI
+   - REST API
+   - KSQL REST API
+
+
 # Архитектура
 Primary Cluster (Локальный)
 Контроллер: kafka-controller-0 (nodeId: 4000)
@@ -64,7 +117,7 @@ Encryption: SSL/TLS
 
 Authorization: StandardAuthorizer с ACL
 
-Super User: admin/admin
+Super User: admin/admin или  admin/Qwerty111
 
 Основные настройки Kafka
 Primary Cluster
@@ -111,6 +164,41 @@ docker-compose ps
 docker-compose logs kafka-0
 docker-compose logs schema-registry
 ```
+
+![img_4.png](img_4.png)
+
+## Сервисы мониторинга
+Prometheus - сбор и хранение метрик
+Порт: 9090
+Конфигурация: .infra/prometheus/
+Data: .infra/prometheus/prometheus_data/
+
+Grafana - визуализация метрик
+Порт: 3000
+Учетные данные: admin/admin
+Дашборды: .infra/grafana/dashboards/
+
+Alertmanager - управление алертами
+Порт: 9093
+Конфигурация: .infra/alertmanager/
+Kafka Exporter - сбор метрик Kafka
+Порт: 9308
+
+Подключение ко всем брокерам с SSL/SASL
+
+```bash
+# Полный стек мониторинга
+docker-compose up -d prometheus alertmanager grafana kafka-exporter
+
+# Только мониторинг
+docker-compose up -d prometheus grafana kafka-exporter
+```
+
+## Проверка работы
+Prometheus Targets: http://localhost:9090/targets
+Grafana: http://localhost:3000 (admin/admin)
+Alertmanager: http://localhost:9093
+Kafka Exporter Metrics: http://localhost:9308/metrics
 
 # Security
 SSL Certificates
