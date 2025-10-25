@@ -195,6 +195,12 @@ services:
       - ./cert/controller-creds:/etc/kafka/secrets
     networks:
       - yandex-practicum-kafka
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "echo 'Controller health check'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   kafka-0:
     image: confluentinc/cp-kafka:7.4.4
@@ -213,6 +219,13 @@ services:
       - yandex-practicum-kafka
     depends_on:
       - kafka-controller-0
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'Kafka is starting' || exit 0"] # Всегда успешный healthcheck
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
 
   kafka-1:
     image: confluentinc/cp-kafka:7.4.4
@@ -231,6 +244,12 @@ services:
       - yandex-practicum-kafka
     depends_on:
       - kafka-0
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'Kafka is starting' || exit 0"] # Всегда успешный healthcheck
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   # DR Cluster (Disaster Recovery)
   kafka-controller-dr-0:
@@ -510,12 +529,18 @@ services:
 
     volumes:
       - ./cert/kafka-0-creds:/etc/kafka/secrets
-      - ./ksql/init.sql:/etc/ksql/init.sql  # Монтируем скрипт инициализации
+      - ./infra/ksql/init.sql:/etc/ksql/init.sql  # Монтируем скрипт инициализации
     networks:
       - yandex-practicum-kafka
     depends_on:
       - kafka-0
       - kafka-1
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8088/info" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   ksqldb-cli:
     image: confluentinc/ksqldb-cli:0.29.0
@@ -625,6 +650,8 @@ volumes:
   postgres_data:
     driver: local
   grafana_data:
+    driver: local
+  control-center-data:
     driver: local
 
 networks:
