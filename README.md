@@ -508,3 +508,104 @@ Incremental Updates: KTable автоматически обновляется
 ```bash
 docker-compose ud -d shop-product-filter-stream
 ```
+
+## client
+
+Модуль client представляет собой Spring Boot приложение, которое обрабатывает пользовательские поисковые запросы, сохраняет их в базу данных, публикует в Kafka и предоставляет персонализированные рекомендации.
+
+## Архитектура
+
+![img_3.png](img_3.png)
+
+## Компоненты
+
+Kafka Producer - публикация запросов в топик userQuery
+Kafka Consumer - потребление рекомендаций из топика user_recommendations
+JPA Repository - сохранение запросов в PostgreSQL
+KSQL Processing - потоковая обработка и генерация рекомендаций
+REST Controller - API для поиска и получения рекомендаций
+
+## Топики
+
+Входной топик: userQuery - поток пользовательских поисковых запросов
+Топик рекомендаций: user_recommendations - сгенерированные рекомендации
+Выходной API: REST endpoints для клиентов
+
+## Рабочий процесс
+
+1. Обработка поискового запроса
+2. Сохранение и публикация запроса
+   - Создание объекта UserQuery
+   - Сохранение в PostgreSQL через UserQueryRepository
+   - Преобразование в DTO и сериализация в JSON
+   - Публикация в Kafka топик userQuery
+   - Логирование результата операции
+3. KSQL обработка
+4. Потребление рекомендаций
+   - Подписка на топик user_recommendations
+   - Десериализация JSON в UserRecommendation
+   - Сохранение в in-memory кэш (ConcurrentHashMap)
+   - Предоставление API для получения рекомендаций
+
+## Логирование и мониторинг
+
+### Ключевые события:
+
+Обработка запросов:
+
+✅ Start work saveAndPublishUserQuery - начало обработки
+
+✅ User query saved to DB - успешное сохранение
+
+✅ User query published to Kafka - успешная публикация
+
+Kafka сообщения:
+
+📥 Received recommendation for user - получена рекомендация
+
+✅ Processed recommendation for user - рекомендация обработана
+
+Ошибки:
+
+❌ Failed to publish user query - ошибка публикации
+
+❌ Failed to parse recommendation - ошибка парсинга
+
+
+## Особенности реализации
+
+### State Management:
+
+   - In-Memory Cache: ConcurrentHashMap для хранения рекомендаций
+   - Database Persistence: PostgreSQL для долговременного хранения запросов
+   - Kafka Offsets: Автоматическое управление смещениями
+
+### Error Handling:
+
+   - Transaction Management: @Transactional для операций БД
+   - Kafka Retries: Повторные попытки отправки сообщений
+   - Graceful Degradation: Работа при недоступности рекомендаций
+
+### Performance:
+
+   - Async Processing: Асинхронная отправка в Kafka
+   - Connection Pooling: Оптимизация подключений к БД
+   - Batch Processing: KSQL агрегация запросов
+
+### Security: 
+
+   - SASL/SSL: Защищенное подключение к Kafka
+   - Input Validation: Проверка пользовательского ввода
+   - SQL Injection Protection: JPA параметризованные запросы
+
+## REST API
+
+   - GET - /products?userId=5&query=Кожаный - Поиск товаров + сохранение запроса
+   - GET - /users/{userId}/recommendations - Получение персонализированных рекомендаций
+   - GET - /debug/recommendations - Отладочная информация о кэше
+
+## Запуск и управление
+Запуск:
+```bash
+docker-compose ud -d client
+```
