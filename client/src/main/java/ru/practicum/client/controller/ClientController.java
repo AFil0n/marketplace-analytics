@@ -39,9 +39,8 @@ public class ClientController {
 
         return ResponseEntity.ok(Map.of(
                 "user_id", userId,
-                "recommendation", recommendation.getRecommendation_message(),
-                "type", recommendation.getRecommendation_type(),
-                "last_query_time", recommendation.getLast_query_time()
+                "recommendation", recommendation.getRecommendationMessage(),
+                "type", recommendation.getRecommendationType()
         ));
     }
 
