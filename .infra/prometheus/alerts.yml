@@ -1,0 +1,24 @@
+groups:
+  - name: kafka_alerts
+    rules:
+      # Алерт на падение Kafka брокера
+      - alert: KafkaBrokerDown
+        expr: up{job="kafka-brokers"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "Kafka broker {{ $labels.instance }} is down"
+          description: "Kafka broker {{ $labels.instance }} has been down for more than 1 minute."
+
+      # Алерт на недоступные партиции
+      - alert: KafkaUnderReplicatedPartitions
+        expr: kafka_server_replicamanager_underreplicatedpartitions > 0
+        for: 3m
+        labels:
+          severity: warning
+          service: kafka
+        annotations:
+          summary: "Under-replicated partitions on {{ $labels.instance }}"
+          description: "There are {{ $value }} under-replicated partitions on {{ $labels.instance }}"

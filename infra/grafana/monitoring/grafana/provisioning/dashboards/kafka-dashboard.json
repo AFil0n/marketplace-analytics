@@ -1,0 +1,101 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Kafka Cluster Monitoring",
+    "tags": ["kafka", "prometheus"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Kafka Brokers Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"kafka-brokers\"}",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Under Replicated Partitions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "kafka_server_replicamanager_underreplicatedpartitions",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Active Controllers",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "kafka_controller_kafkacontroller_activecontrollercount",
+            "legendFormat": "Active Controllers"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Bytes In/Out Per Second",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(kafka_server_brokertopicmetrics_bytesin_total[5m])",
+            "legendFormat": "{{topic}} Bytes In"
+          },
+          {
+            "expr": "rate(kafka_server_brokertopicmetrics_bytesout_total[5m])",
+            "legendFormat": "{{topic}} Bytes Out"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 16, "x": 8, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Request Latency (99th percentile)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "kafka_network_requestmetrics_totaltimems{quantile=\"0.99\"}",
+            "legendFormat": "{{request}} {{instance}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(kafka_network_requestmetrics_errors_total[5m])",
+            "legendFormat": "{{request}} {{instance}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    }
+  }
+}

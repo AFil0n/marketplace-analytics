@@ -215,6 +215,8 @@ services:
       KAFKA_LISTENERS: BROKER://:1090,INTERNAL://:1092
       KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-0:1090,INTERNAL://kafka-0:1092
       KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=1091"
+      KAFKA_JMX_PORT: 1091
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -240,6 +242,8 @@ services:
       KAFKA_LISTENERS: BROKER://:2090,INTERNAL://:2092
       KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-1:2090,INTERNAL://kafka-1:2092
       KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=1091"
+      KAFKA_JMX_PORT: 2091
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -279,6 +283,8 @@ services:
       KAFKA_LISTENERS: BROKER://:3090,INTERNAL://:3092
       KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-dr-0:3090,INTERNAL://kafka-dr-0:3092
       KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=1091"
+      KAFKA_JMX_PORT: 3091
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -297,6 +303,8 @@ services:
       KAFKA_LISTENERS: BROKER://:3190,INTERNAL://:3192
       KAFKA_ADVERTISED_LISTENERS: BROKER://kafka-dr-1:3190,INTERNAL://kafka-dr-1:3192
       KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=1091"
+      KAFKA_JMX_PORT: 3191
     networks:
       - yandex-practicum-kafka
     depends_on:
@@ -559,6 +567,115 @@ services:
     depends_on:
       - ksqldb-server
 
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./.infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./.infra/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./.infra/prometheus/prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      - kafka-0
+      - kafka-1
+
+  # Alertmanager
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./.infra/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./.infra/alertmanager/alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - yandex-practicum-kafka
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./.infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./.infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./.infra/grafana/grafana_data:/var/lib/grafana
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      - prometheus
+
+  # JMX Exporter для Kafka брокеров
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:latest
+    container_name: kafka-exporter
+    ports:
+      - "9308:9308"
+    volumes:
+      - ./cert/kafka-0-creds:/etc/kafka/secrets
+    command:
+      # Primary cluster brokers
+      - "--kafka.server=kafka-0:1090"
+      - "--kafka.server=kafka-1:2090"
+      # DR cluster brokers
+      - "--kafka.server=kafka-dr-0:3090"
+      - "--kafka.server=kafka-dr-1:3190"
+      # SASL authentication
+      - "--sasl.enabled"
+      - "--sasl.username=admin"
+      - "--sasl.password=admin"
+      - "--sasl.mechanism=plain"
+      # TLS configuration
+      - "--tls.enabled"
+      - "--tls.ca-file=/etc/kafka/secrets/ca.pem"
+      - "--tls.cert-file=/etc/kafka/secrets/kafka-cert.pem"
+      - "--tls.key-file=/etc/kafka/secrets/kafka-cert.pem"
+      - "--tls.insecure-skip-tls-verify"
+    networks:
+      - yandex-practicum-kafka
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-dr-0
+      - kafka-dr-1
+
+  # Node Exporter для мониторинга хоста
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - ./infra/nodeExporter/proc:/host/proc:ro
+      - ./infra/nodeExporter/sys:/host/sys:ro
+      - ./infra/nodeExporter/:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - yandex-practicum-kafka
+
   shopproducer:
     <<: *java-service
     container_name: shopProducer
@@ -652,6 +769,10 @@ volumes:
   grafana_data:
     driver: local
   control-center-data:
+    driver: local
+  prometheus_data:
+    driver: local
+  alertmanager_data:
     driver: local
 
 networks:

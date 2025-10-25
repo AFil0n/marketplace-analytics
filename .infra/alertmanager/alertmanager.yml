@@ -1,0 +1,16 @@
+global:
+  smtp_smarthost: 'localhost:25'
+  smtp_from: 'alertmanager@localhost'
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'default-receiver'
+
+receivers:
+  - name: 'default-receiver'
+    webhook_configs:
+      - url: 'http://localhost:5001/'
+        send_resolved: true

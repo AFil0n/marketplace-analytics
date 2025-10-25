@@ -1,0 +1,103 @@
+groups:
+  - name: kafka_alerts
+    rules:
+      # Алерт на падение Kafka брокера
+      - alert: KafkaBrokerDown
+        expr: up{job="kafka-brokers"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "Kafka broker {{ $labels.instance }} is down"
+          description: "Kafka broker {{ $labels.instance }} has been down for more than 1 minute."
+
+      # Алерт на недоступность Kafka
+      - alert: KafkaUnavailable
+        expr: kafka_server_kafkaserver_running == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "Kafka service is unavailable on {{ $labels.instance }}"
+          description: "Kafka service on {{ $labels.instance }} is not running."
+
+      # Алерт на высокую загрузку CPU
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for more than 5 minutes on {{ $labels.instance }}"
+
+      # Алерт на нехватку памяти
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 90% for more than 5 minutes on {{ $labels.instance }}"
+
+      # Алерт на проблемы с диском
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk usage is above 85% for more than 5 minutes on {{ $labels.instance }}"
+
+      # Алерт на высокую задержку в Kafka
+      - alert: HighKafkaLatency
+        expr: kafka_network_requestmetrics_totaltimems{request="Produce", quantile="0.99"} > 1000
+        for: 2m
+        labels:
+          severity: warning
+          service: kafka
+        annotations:
+          summary: "High produce latency on {{ $labels.instance }}"
+          description: "Kafka produce latency (99th percentile) is above 1000ms on {{ $labels.instance }}"
+
+      # Алерт на недоступные партиции
+      - alert: KafkaUnderReplicatedPartitions
+        expr: kafka_server_replicamanager_underreplicatedpartitions > 0
+        for: 3m
+        labels:
+          severity: warning
+          service: kafka
+        annotations:
+          summary: "Under-replicated partitions on {{ $labels.instance }}"
+          description: "There are {{ $value }} under-replicated partitions on {{ $labels.instance }}"
+
+  - name: application_alerts
+    rules:
+      # Алерт на недоступность приложения
+      - alert: ApplicationDown
+        expr: up{job="spring-boot-apps"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: application
+        annotations:
+          summary: "Application {{ $labels.instance }} is down"
+          description: "Application {{ $labels.instance }} has been down for more than 1 minute."
+
+      # Алерт на высокую ошибку в приложении
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) / rate(http_server_requests_seconds_count[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: application
+        annotations:
+          summary: "High error rate on {{ $labels.instance }}"
+          description: "Error rate is above 5% for more than 2 minutes on {{ $labels.instance }}"

@@ -21,19 +21,8 @@ scrape_configs:
       - targets: ['kafka-exporter:9308']
     scrape_interval: 10s
     metrics_path: /metrics
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '(.*)'
-        replacement: 'kafka-exporter'
 
-  # Node Exporter - метрики системы
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['node-exporter:9100']
-    scrape_interval: 15s
-
-  # Kafka брокеры через JMX
+  # Kafka брокеры
   - job_name: 'kafka-brokers'
     static_configs:
       - targets:
@@ -43,26 +32,6 @@ scrape_configs:
           - 'kafka-dr-1:3190'
     scrape_interval: 15s
     metrics_path: /metrics
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '(.*)'
-        replacement: '$1'
-
-  # Spring Boot приложения
-  - job_name: 'spring-boot-apps'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets:
-          - 'shopproducer:3333'
-          - 'shop-consumer:1122'
-          - 'client:1113'
-    scrape_interval: 15s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: '(.*)'
-        replacement: '$1'
 
 alerting:
   alertmanagers:
