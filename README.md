@@ -79,16 +79,20 @@ CLUSTER_ID: 'drWo7IWazngRchmPES6q5B=='
 KAFKA_PROCESS_ROLES: controller/broker
 KAFKA_CONTROLLER_QUORUM_VOTERS: 5000@kafka-controller-dr-0:5090
 KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
-Сетевые порты
-Сервис	Порт	Назначение
-kafka-0	1090	External listener
-kafka-1	2090	External listener
-kafka-dr-0	3090	External listener
-kafka-dr-1	3190	External listener
-kafka-ui	8090	Web Interface
-kafka-ui-dr	8091	Web Interface
-schema-registry	8081/8082	HTTP/HTTPS
-schema-registry-dr	6081/6082	HTTP/HTTPS
+
+## Сетевые порты
+| Сервис             |	  Порт   |     Назначение     |
+|--------------------|-----------|--------------------|
+| kafka-0            | 1090      |	External listener |
+| kafka-1            | 2090      |	External listener |
+| kafka-dr-0         | 3090      |	External listener |
+| kafka-dr-1         | 3190      |	External listener |
+| kafka-ui           | 8090      |	Web Interface     |
+| kafka-ui-dr        | 8091      |	Web Interface     |
+| schema-registry    | 8081/8082 |	HTTP/HTTPS        |
+| ksql-server        | 8088      | KSQL REST API     |
+| schema-registry-dr | 6081/6082 |	HTTP/HTTPS        |
+ 
 
 # Мониторинг
 Kafka UI
@@ -143,6 +147,11 @@ MirrorMaker настраивается через конфигурационны
 ./infra/mirrormaker/producer.cfg - конфигурация producer для target кластера
 
 ./infra/mirrormaker/start.sh - скрипт запуска
+
+# KSQL
+KSQL - для прокидывания рекомендаций. Настройки:
+
+./infra/ksql/init.sql
 
 # Управление топиками
 Инициализация топиков
